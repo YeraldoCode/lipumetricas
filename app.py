@@ -29,7 +29,6 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
     
     # Leer el archivo desde la celda A2
     df = pd.read_excel(archivo, skiprows=1)
-    print(f"Columnas en el archivo: {df.columns.tolist()}")  # Debug
     
     # Mantener los valores originales sin convertir
     df = df.astype(str)
@@ -44,7 +43,6 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
     except KeyError as e:
         print(f"Error al seleccionar columnas: {e}")
         # Si falla, intenta con nombres alternativos o muestra todas las columnas
-        print("Columnas disponibles:", df.columns.tolist())
         
         # Mapeo de posibles nombres de columnas
         column_mapping = {}
