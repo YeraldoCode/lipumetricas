@@ -1,0 +1,204 @@
+/* Estilos generales */
+body {
+    padding-top: 56px;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.navbar-brand img {
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.05);
+}
+
+/* Filtros */
+.filter-card {
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.filter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Cards principales */
+.metric-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.metric-card .card-header {
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+    padding: 1rem;
+}
+
+/* Tablas */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Progress bars */
+.progress {
+    height: 20px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Botones */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-info {
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+    color: #fff;
+}
+
+/* Gráficos */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+}
+
+/* Animaciones */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+}
+
+.fade-enter, .fade-leave-to {
+    opacity: 0;
+}
+
+/* Dashboard específico */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Detalle específico */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.detail-title {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Tooltips personalizados */
+.tooltip-inner {
+    background-color: #2c3e50;
+    border-radius: 4px;
+}
+
+.bs-tooltip-auto[x-placement^=top] .arrow::before, 
+.bs-tooltip-top .arrow::before {
+    border-top-color: #2c3e50;
+}
+
+/* Estados y badges */
+.badge-success {
+    background-color: #28a745;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* Mejoras de accesibilidad */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+}
+
+/* Estilos para el modo oscuro si se implementa */
+@media (prefers-color-scheme: dark) {
+    /* Aquí irían los estilos para modo oscuro si se requiere */
+}
