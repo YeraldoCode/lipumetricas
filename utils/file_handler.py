@@ -22,6 +22,6 @@ def combine_excel_files(existing_file, new_file):
         new_df = pd.read_excel(new_file)
         combined_df = pd.concat([existing_df, new_df], ignore_index=True)
         combined_df.to_excel(existing_file, index=False)
+        return existing_file
     else:
         new_df = pd.read_excel(new_file)
-        new_df.to_excel(existing_file, index=False)

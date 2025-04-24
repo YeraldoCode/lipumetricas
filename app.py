@@ -9,9 +9,9 @@ app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
 app.secret_key = SECRET_KEY
 
 SEMANA_ARCHIVOS = {
-    'semana_14': 'datos-semana-14.xlsx',
-    'semana_15': 'datos-semana-15.xlsx',
-    'semana_16': 'datos-semana-16.xlsx'
+    'semana_14': 'semana/datos-semana-14.xlsx',
+    'semana_15': 'semana/datos-semana-15.xlsx',
+    'semana_16': 'semana/datos-semana-16.xlsx'
 }
 
 SEMANA_FECHAS = {
@@ -20,12 +20,13 @@ SEMANA_FECHAS = {
     'semana_16': '14-abril a 20-abril'
 }
 
+
 def cargar_detalle_generico(semana, metrica, cliente=None):
     partes = semana.split('_')
     if len(partes) != 2:
         raise ValueError(f"Formato de semana inválido: {semana}")
     
-    archivo = f"detalle-semana-{partes[1]}-{metrica}.xlsx"
+    archivo = f"detalles/detalle-semana-{partes[1]}-{metrica}.xlsx"
     print(f"Intentando abrir archivo: {archivo}")  # Debug
     
     if not os.path.exists(archivo):
@@ -101,8 +102,6 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
     
     return result
 
-
-
 def cargar_datos(semana):
     excel_path = SEMANA_ARCHIVOS.get(semana)
     if not excel_path or not os.path.exists(excel_path):
@@ -116,6 +115,7 @@ def cargar_datos(semana):
             if df[col].max() > 1.5:
                 df[col] = df[col] / 100
     return df
+
 
 @app.route('/')
 def index():
@@ -243,36 +243,41 @@ def grafica():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        if 'semanaFile' not in request.files or 'detalleNsFile' not in request.files or 'detalleVokFile' not in request.files or 'detalleCalidadRutaFile' not in request.files:
-            flash('No file part')
+        # Verificar si al menos un archivo está presente en la solicitud
+        if not any(request.files.get(key) for key in ['semanaFile', 'detalleNsFile', 'detalleVokFile', 'detalleCalidadRutaFile']):
+            flash('No se seleccionó ningún archivo', 'error')
             return redirect(request.url)
-        semana_file = request.files['semanaFile']
-        detalle_ns_file = request.files['detalleNsFile']
-        detalle_vok_file = request.files['detalleVokFile']
-        detalle_calidad_ruta_file = request.files['detalleCalidadRutaFile']
-        if semana_file.filename == '' or detalle_ns_file.filename == '' or detalle_vok_file.filename == '' or detalle_calidad_ruta_file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if allowed_file(semana_file.filename) and allowed_file(detalle_ns_file.filename) and allowed_file(detalle_vok_file.filename) and allowed_file(detalle_calidad_ruta_file.filename):
+        
+        # Obtener los archivos de la solicitud
+        semana_file = request.files.get('semanaFile')
+        detalle_ns_file = request.files.get('detalleNsFile')
+        detalle_vok_file = request.files.get('detalleVokFile')
+        detalle_calidad_ruta_file = request.files.get('detalleCalidadRutaFile')
+        
+        # Procesar cada archivo si está presente
+        if semana_file and allowed_file(semana_file.filename):
             semana_filepath = os.path.join(SEMANAS_FOLDER, semana_file.filename)
+            semana_file.save(semana_filepath)
+            flash(f'Archivo {semana_file.filename} subido exitosamente', 'success')
+        
+        if detalle_ns_file and allowed_file(detalle_ns_file.filename):
             detalle_ns_filepath = os.path.join(DETALLES_FOLDER, detalle_ns_file.filename)
+            detalle_ns_file.save(detalle_ns_filepath)
+            flash(f'Archivo {detalle_ns_file.filename} subido exitosamente', 'success')
+        
+        if detalle_vok_file and allowed_file(detalle_vok_file.filename):
             detalle_vok_filepath = os.path.join(DETALLES_FOLDER, detalle_vok_file.filename)
+            detalle_vok_file.save(detalle_vok_filepath)
+            flash(f'Archivo {detalle_vok_file.filename} subido exitosamente', 'success')
+        
+        if detalle_calidad_ruta_file and allowed_file(detalle_calidad_ruta_file.filename):
             detalle_calidad_ruta_filepath = os.path.join(DETALLES_FOLDER, detalle_calidad_ruta_file.filename)
-            
-            # Combinar archivos existentes con los nuevos
-            combine_excel_files(semana_filepath, semana_file)
-            combine_excel_files(detalle_ns_filepath, detalle_ns_file)
-            combine_excel_files(detalle_vok_filepath, detalle_vok_file)
-            combine_excel_files(detalle_calidad_ruta_filepath, detalle_calidad_ruta_file)
-            
-            # Actualizar el diccionario SEMANA_ARCHIVOS
-            semana_key = f"semana_{len(SEMANA_ARCHIVOS) + 14}"  # Ajusta el índice según sea necesario
-            SEMANA_ARCHIVOS[semana_key] = semana_file.filename
-            
-            flash(f'Files {semana_file.filename}, {detalle_ns_file.filename}, {detalle_vok_file.filename}, {detalle_calidad_ruta_file.filename} uploaded and combined successfully')
-            return redirect(url_for('index'))
+            detalle_calidad_ruta_file.save(detalle_calidad_ruta_filepath)
+            flash(f'Archivo {detalle_calidad_ruta_file.filename} subido exitosamente', 'success')
+        
+        return redirect(url_for('index'))
+    
     return render_template('admin_upload.html')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
