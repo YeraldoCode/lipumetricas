@@ -8,6 +8,9 @@
     <!-- Bootstrap + Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         html, body {
@@ -100,6 +103,89 @@
                 padding: 1rem 0.5rem;
             }
         }
+        #grafico_vok {
+        min-height: 300px;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 576px) {
+        #grafico_vok {
+            min-height: 250px;
+        }
+    }
+    .alert {
+    border: none;
+    border-left: 4px solid #0dcaf0;
+    background-color: rgba(13, 202, 240, 0.1);
+    padding: 1rem;
+    margin: 0 0.75rem;
+    }
+
+    .alert .bi {
+        color: #0dcaf0;
+    }
+
+    .alert strong {
+        color: #087990;
+    }
+
+    .alert button.btn-close {
+        padding: 1.05rem;
+    }
+
+    @media (max-width: 576px) {
+        .alert {
+            margin: 0 0.5rem;
+            padding: 0.75rem;
+        }
+        
+        .alert .bi {
+            font-size: 1rem !important;
+        }
+    }
+
+    .swal2-popup {
+        font-family: 'Segoe UI', sans-serif !important;
+    }
+
+    .swal-wide {
+        width: 400px !important;
+    }
+
+    .swal2-icon {
+        border-color: #198754 !important;
+        color: #198754 !important;
+    }
+
+    .swal2-title {
+        color: #198754 !important;
+        font-size: 1.5rem !important;
+    }
+
+    .swal2-html-container {
+        font-size: 1rem !important;
+    }
+
+    @media (max-width: 576px) {
+        .swal-wide {
+            width: 300px !important;
+        }
+        
+        .swal2-title {
+            font-size: 1.3rem !important;
+        }
+        
+        .swal2-html-container {
+            font-size: 0.9rem !important;
+        }
+    }
+
     </style>
 </head>
 <body>
@@ -126,6 +212,8 @@
             <p class="text-muted">Cliente: <strong>{{ cliente }}</strong></p>
             {% endif %}
         </div>
+        
+
 
         <div class="table-responsive shadow-sm">
             <table class="table table-bordered table-hover align-middle mb-0">
@@ -164,12 +252,176 @@
             </table>
         </div>
     </div>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center">
+                <h5 class="card-title mb-0">Gráfico de Viajes OK</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <canvas id="grafico_vok"></canvas>
+        </div>
+    </div>
 </div>
 
 <!-- Footer -->
 <footer>
     LIPU MTY by Traxion © 2025. Todos los derechos reservados.
 </footer>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const tableRows = document.querySelectorAll('table tbody tr');
+            const data = Array.from(tableRows)
+                .filter(row => !row.classList.contains('text-muted'))  // omitir fila "No hay datos"
+                .map(row => {
+                    const cells = row.querySelectorAll('td');
+                    return {
+                        Des: cells.length === 6 ? cells[1].textContent.trim() : cells[0].textContent.trim(),
+                        vok_val: parseInt(cells[cells.length - 4].textContent) || 0,
+                        vok_val_ok: parseInt(cells[cells.length - 3].textContent) || 0,
+                        vok_p: parseFloat(cells[cells.length - 2].textContent) || 0,
+                        malos: parseInt(cells[cells.length - 1].textContent) || 0
+                    };
+                });
+    
+            if (data.length === 0) {
+                console.log('No hay datos disponibles para el gráfico');
+                return;
+            }
+    
+            const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
+    
+            // Mostrar alerta si no hay cliente seleccionado
+            if (!clienteSeleccionado) {
+                Swal.fire({
+                    title: '¡Información!',
+                    text: 'Selecciona un cliente para ver sus gráficos detallados por ruta.',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#198754',
+                    customClass: {
+                        popup: 'swal-wide',
+                        title: 'text-success fw-bold',
+                    }
+                });
+            }
+    
+            let labels = [], totales = [], buenos = [], malos = [], porcentajes = [];
+    
+            if (clienteSeleccionado) {
+                labels = data.map(row => row.Des);
+                totales = data.map(row => row.vok_val);
+                buenos = data.map(row => row.vok_val_ok);
+                malos = data.map(row => row.malos);
+                porcentajes = data.map(row => row.vok_p);
+            } else {
+                // Agrupar todo en una sola barra
+                const total = data.reduce((acc, row) => acc + row.vok_val, 0);
+                const total_ok = data.reduce((acc, row) => acc + row.vok_val_ok, 0);
+                const total_malos = data.reduce((acc, row) => acc + row.malos, 0);
+                const porcentaje_ok = total > 0 ? ((total_ok / total) * 100).toFixed(2) : 0;
+    
+                labels = ['Resumen General'];
+                totales = [total];
+                buenos = [total_ok];
+                malos = [total_malos];
+                porcentajes = [parseFloat(porcentaje_ok)];
+            }
+    
+            const ctx = document.getElementById('grafico_vok');
+            if (!ctx) {
+                console.error('No se encontró el elemento canvas para el gráfico');
+                return;
+            }
+    
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Viajes',
+                            data: totales,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            order: 3
+                        },
+                        {
+                            label: 'Viajes OK',
+                            data: buenos,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            order: 2
+                        },
+                        {
+                            label: 'Viajes Malos',
+                            data: malos,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            order: 1
+                        },
+                        {
+                            label: 'Porcentaje OK',
+                            data: porcentajes,
+                            type: 'line',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'porcentaje',
+                            order: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Viajes'
+                            }
+                        },
+                        porcentaje: {
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Porcentaje OK'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (context.dataset.label === 'Porcentaje OK') {
+                                        return `${label}: ${value}%`;
+                                    }
+                                    return `${label}: ${value}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error al crear el gráfico:', error);
+        }
+    });
+</script>
+
 
 </body>
 </html>

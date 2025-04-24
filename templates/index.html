@@ -5,6 +5,7 @@
     <title>Dashboard Logística</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         html, body {
@@ -37,6 +38,9 @@
             letter-spacing: 0.4px;
             box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
             flex-shrink: 0;
+        }
+        #uploadExcel {
+            display: none;
         }
     </style>
 </head>
@@ -74,6 +78,14 @@
                     <option value="{{ c }}" {% if request.args.get('cliente') == c %}selected{% endif %}>{{ c }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <!-- Botón de carga de archivo -->
+            <div class="col-md-4 col-12">
+                <label for="uploadExcel" class="form-label fw-light small text-muted">Cargar nueva semana</label>
+                <input type="file" id="uploadExcel" class="form-control" accept=".xlsx, .xls" style="display: none;">
+                <button type="button" class="btn btn-link" onclick="document.getElementById('uploadExcel').click();">
+                    <i class="bi bi-upload"></i> 
+                </button>
             </div>
         </div>
     </form>
