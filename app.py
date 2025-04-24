@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
 import pandas as pd
 import os
+from utils.file_handler import allowed_file, save_file, read_excel
+from config import SEMANAS_FOLDER, DETALLES_FOLDER
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
 
 SEMANA_ARCHIVOS = {
     'semana_14': 'datos-semana-14.xlsx',
@@ -234,6 +237,30 @@ def grafica():
         return jsonify(fig.to_json())
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+    
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'semanaFile' not in request.files or 'detalleNsFile' not in request.files or 'detalleVokFile' not in request.files or 'detalleCalidadRutaFile' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        semana_file = request.files['semanaFile']
+        detalle_ns_file = request.files['detalleNsFile']
+        detalle_vok_file = request.files['detalleVokFile']
+        detalle_calidad_ruta_file = request.files['detalleCalidadRutaFile']
+        if semana_file.filename == '' or detalle_ns_file.filename == '' or detalle_vok_file.filename == '' or detalle_calidad_ruta_file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if allowed_file(semana_file.filename) and allowed_file(detalle_ns_file.filename) and allowed_file(detalle_vok_file.filename) and allowed_file(detalle_calidad_ruta_file.filename):
+            semana_filename = save_file(semana_file, SEMANAS_FOLDER)
+            detalle_ns_filename = save_file(detalle_ns_file, DETALLES_FOLDER)
+            detalle_vok_filename = save_file(detalle_vok_file, DETALLES_FOLDER)
+            detalle_calidad_ruta_filename = save_file(detalle_calidad_ruta_file, DETALLES_FOLDER)
+            flash(f'Files {semana_filename}, {detalle_ns_filename}, {detalle_vok_filename}, {detalle_calidad_ruta_filename} uploaded successfully')
+            return redirect(url_for('index'))
+    return render_template('admin_upload.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

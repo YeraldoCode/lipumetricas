@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Upload{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h4 class="text-center mb-4 fw-semibold">📊 Panel de Carga de Archivos Excel</h4>
+
+    <form action="/upload" method="post" enctype="multipart/form-data" class="p-4 shadow rounded bg-light">
+        <div class="row g-3">
+
+            <!-- Datos de semana -->
+            <div class="col-md-6">
+                <label for="semanaFile" class="form-label text-muted small">
+                    <i class="bi bi-calendar-week me-1"></i> Archivo de datos de semana
+                </label>
+                <input type="file" class="form-control form-control-sm" id="semanaFile" name="semanaFile" accept=".xlsx, .xls">
+            </div>
+
+            <!-- Detalle NS -->
+            <div class="col-md-6">
+                <label for="detalleNsFile" class="form-label text-muted small">
+                    <i class="bi bi-graph-up me-1"></i> Archivo de detalle NS
+                </label>
+                <input type="file" class="form-control form-control-sm" id="detalleNsFile" name="detalleNsFile" accept=".xlsx, .xls">
+            </div>
+
+            <!-- Detalle VOK -->
+            <div class="col-md-6">
+                <label for="detalleVokFile" class="form-label text-muted small">
+                    <i class="bi bi-bar-chart-line me-1"></i> Archivo de detalle VOK
+                </label>
+                <input type="file" class="form-control form-control-sm" id="detalleVokFile" name="detalleVokFile" accept=".xlsx, .xls">
+            </div>
+
+            <!-- Detalle Calidad de Ruta -->
+            <div class="col-md-6">
+                <label for="detalleCalidadRutaFile" class="form-label text-muted small">
+                    <i class="bi bi-check-circle me-1"></i> Archivo de detalle Calidad de Ruta
+                </label>
+                <input type="file" class="form-control form-control-sm" id="detalleCalidadRutaFile" name="detalleCalidadRutaFile" accept=".xlsx, .xls">
+            </div>
+
+            <!-- Botón -->
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-cloud-arrow-up me-1"></i> Subir Archivos
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+
+
