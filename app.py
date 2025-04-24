@@ -1,11 +1,12 @@
 from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
 import pandas as pd
 import os
-from utils.file_handler import allowed_file, save_file, read_excel
-from config import SEMANAS_FOLDER, DETALLES_FOLDER
+from utils.file_handler import allowed_file, combine_excel_files, save_file, read_excel
+from config import SEMANAS_FOLDER, DETALLES_FOLDER, SECRET_KEY
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
+app.secret_key = SECRET_KEY
 
 SEMANA_ARCHIVOS = {
     'semana_14': 'datos-semana-14.xlsx',
@@ -253,11 +254,22 @@ def upload_file():
             flash('No selected file')
             return redirect(request.url)
         if allowed_file(semana_file.filename) and allowed_file(detalle_ns_file.filename) and allowed_file(detalle_vok_file.filename) and allowed_file(detalle_calidad_ruta_file.filename):
-            semana_filename = save_file(semana_file, SEMANAS_FOLDER)
-            detalle_ns_filename = save_file(detalle_ns_file, DETALLES_FOLDER)
-            detalle_vok_filename = save_file(detalle_vok_file, DETALLES_FOLDER)
-            detalle_calidad_ruta_filename = save_file(detalle_calidad_ruta_file, DETALLES_FOLDER)
-            flash(f'Files {semana_filename}, {detalle_ns_filename}, {detalle_vok_filename}, {detalle_calidad_ruta_filename} uploaded successfully')
+            semana_filepath = os.path.join(SEMANAS_FOLDER, semana_file.filename)
+            detalle_ns_filepath = os.path.join(DETALLES_FOLDER, detalle_ns_file.filename)
+            detalle_vok_filepath = os.path.join(DETALLES_FOLDER, detalle_vok_file.filename)
+            detalle_calidad_ruta_filepath = os.path.join(DETALLES_FOLDER, detalle_calidad_ruta_file.filename)
+            
+            # Combinar archivos existentes con los nuevos
+            combine_excel_files(semana_filepath, semana_file)
+            combine_excel_files(detalle_ns_filepath, detalle_ns_file)
+            combine_excel_files(detalle_vok_filepath, detalle_vok_file)
+            combine_excel_files(detalle_calidad_ruta_filepath, detalle_calidad_ruta_file)
+            
+            # Actualizar el diccionario SEMANA_ARCHIVOS
+            semana_key = f"semana_{len(SEMANA_ARCHIVOS) + 14}"  # Ajusta el índice según sea necesario
+            SEMANA_ARCHIVOS[semana_key] = semana_file.filename
+            
+            flash(f'Files {semana_file.filename}, {detalle_ns_file.filename}, {detalle_vok_file.filename}, {detalle_calidad_ruta_file.filename} uploaded and combined successfully')
             return redirect(url_for('index'))
     return render_template('admin_upload.html')
 

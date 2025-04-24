@@ -15,3 +15,13 @@ def save_file(file, folder):
 
 def read_excel(filepath):
     return pd.read_excel(filepath)
+
+def combine_excel_files(existing_file, new_file):
+    if os.path.exists(existing_file):
+        existing_df = pd.read_excel(existing_file)
+        new_df = pd.read_excel(new_file)
+        combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+        combined_df.to_excel(existing_file, index=False)
+    else:
+        new_df = pd.read_excel(new_file)
+        new_df.to_excel(existing_file, index=False)
