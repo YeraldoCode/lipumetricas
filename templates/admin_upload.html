@@ -3,52 +3,301 @@
 {% block title %}Admin Upload{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h4 class="text-center mb-4 fw-semibold">📊 Panel de Carga de Archivos Excel</h4>
+<!-- Estilos personalizados -->
+<style>
+    :root {
+        --primary-color: #1a237e;
+        --accent-color: #304ffe;
+        --success-color: #00c853;
+        --background-color: #f5f7fa;
+        --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
 
-    <form action="/upload" method="post" enctype="multipart/form-data" class="p-4 shadow rounded bg-light">
-        <div class="row g-3">
+    body {
+        background: var(--background-color);
+        font-family: 'Poppins', sans-serif;
+    }
 
-            <!-- Datos de semana -->
-            <div class="col-md-6">
-                <label for="semanaFile" class="form-label text-muted small">
-                    <i class="bi bi-calendar-week me-1"></i> Archivo de datos de semana
-                </label>
-                <input type="file" class="form-control form-control-sm" id="semanaFile" name="semanaFile" accept=".xlsx, .xls">
+    .dashboard-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .page-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: var(--accent-color);
+        border-radius: 2px;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .upload-zone {
+        border: 2px dashed #e0e0e0;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #fafbff;
+        cursor: pointer;
+    }
+
+    .upload-zone:hover {
+        border-color: var(--accent-color);
+        background: #f8f9ff;
+    }
+
+    .upload-icon {
+        font-size: 48px;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .info-button {
+        border: none;
+        background: #eef2ff;
+        color: var(--accent-color);
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .info-button:hover {
+        background: #e3e8ff;
+        transform: translateY(-1px);
+    }
+
+    .upload-button {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .upload-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,200,83,0.2);
+    }
+
+    /* Modal personalizado */
+    .custom-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .custom-modal .modal-header {
+        background: var(--primary-color);
+        color: white;
+        border-radius: 16px 16px 0 0;
+        padding: 1.5rem;
+    }
+
+    .custom-modal .modal-body {
+        padding: 2rem;
+    }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-section h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .metric-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .metric-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+
+    .metric-list li:last-child {
+        border-bottom: none;
+    }
+
+    .metric-list li i {
+        color: var(--success-color);
+        margin-right: 0.5rem;
+    }
+
+    .preview-image {
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="dashboard-container">
+    <h1 class="page-title">Panel de Administración</h1>
+
+    <div class="upload-card">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-zone" id="dropZone">
+                <i class="bi bi-cloud-upload upload-icon"></i>
+                <h4 class="mb-3">Arrastra y suelta tu archivo Excel</h4>
+                <p class="text-muted">o haz clic para seleccionar</p>
+                <input type="file" class="file-input" id="semanaFile" name="semanaFile" accept=".xlsx">
             </div>
 
-            <!-- Detalle NS -->
-            <div class="col-md-6">
-                <label for="detalleNsFile" class="form-label text-muted small">
-                    <i class="bi bi-graph-up me-1"></i> Archivo de detalle NS
-                </label>
-                <input type="file" class="form-control form-control-sm" id="detalleNsFile" name="detalleNsFile" accept=".xlsx, .xls">
-            </div>
-
-            <!-- Detalle VOK -->
-            <div class="col-md-6">
-                <label for="detalleVokFile" class="form-label text-muted small">
-                    <i class="bi bi-bar-chart-line me-1"></i> Archivo de detalle VOK
-                </label>
-                <input type="file" class="form-control form-control-sm" id="detalleVokFile" name="detalleVokFile" accept=".xlsx, .xls">
-            </div>
-
-            <!-- Detalle Calidad de Ruta -->
-            <div class="col-md-6">
-                <label for="detalleCalidadRutaFile" class="form-label text-muted small">
-                    <i class="bi bi-check-circle me-1"></i> Archivo de detalle Calidad de Ruta
-                </label>
-                <input type="file" class="form-control form-control-sm" id="detalleCalidadRutaFile" name="detalleCalidadRutaFile" accept=".xlsx, .xls">
-            </div>
-
-            <!-- Botón -->
-            <div class="col-12 text-center mt-4">
-                <button type="submit" class="btn btn-success px-4">
-                    <i class="bi bi-cloud-arrow-up me-1"></i> Subir Archivos
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <button type="button" class="info-button" id="semanaInfoBtn">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Información del archivo
+                </button>
+                <button type="submit" class="upload-button">
+                    <i class="bi bi-cloud-arrow-up me-2"></i>
+                    Subir Archivo
                 </button>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<!-- Modal mejorado -->
+<div class="modal fade custom-modal" id="semanaInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                    Estructura del Archivo Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h6>
+                        <i class="bi bi-table me-2"></i>
+                        Hoja: Resumen
+                    </h6>
+                    <p>Datos generales agregados de la semana</p>
+                    <ul class="metric-list">
+                        <li><i class="bi bi-check2"></i>Cliente (c)</li>
+                        <li><i class="bi bi-check2"></i>N5_TOTAL, N5_Buenos, n5_malos, N5_%</li>
+                        <li><i class="bi bi-check2"></i>VOK_Total, VOK_Buenos, VOK_Malos, VOK_%</li>
+                    </ul>
+                    <img src="/static/images/Resumen.png" alt="Ejemplo Resumen" class="img-fluid preview-image mt-3">
+                </div>
+
+                <div class="info-section">
+                    <h6>
+                        <i class="bi bi-graph-up me-2"></i>
+                        Hoja: Detalle_NS
+                    </h6>
+                    <p>Métricas de Nivel de Servicio</p>
+                    <ul class="metric-list">
+                        <li><i class="bi bi-check2"></i>Cliente (c), Descripción (des)</li>
+                        <li><i class="bi bi-check2"></i>Suma de ns_val, ns_val_ok, ns_p</li>
+                        <li><i class="bi bi-check2"></i>Suma de malos</li>
+                    </ul>
+                    <img src="/static/images/Detalle_NS.png" alt="Ejemplo NS" class="img-fluid preview-image mt-3">
+                </div>
+
+                <div class="info-section">
+                    <h6>
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Hoja: Detalle_VOK
+                    </h6>
+                    <p>Validación de Origen y Kilometraje</p>
+                    <ul class="metric-list">
+                        <li><i class="bi bi-check2"></i>Cliente (c), Descripción (Des)</li>
+                        <li><i class="bi bi-check2"></i>vok_val, vok_val_ok, vok_p</li>
+                        <li><i class="bi bi-check2"></i>malos</li>
+                    </ul>
+                    <img src="/static/images/Detalle_VOK.png" alt="Ejemplo VOK" class="img-fluid preview-image mt-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CDN necesarios -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidad del modal
+    const infoBtn = document.getElementById('semanaInfoBtn');
+    const modal = new bootstrap.Modal(document.getElementById('semanaInfoModal'));
+    
+    infoBtn.addEventListener('click', () => modal.show());
+
+    // Funcionalidad de drag & drop
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('semanaFile');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.add('border-primary');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove('border-primary');
+        });
+    });
+
+    dropZone.addEventListener('drop', handleDrop);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+    }
+});
+</script>
 
 {% endblock %}

@@ -8,105 +8,51 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
 app.secret_key = SECRET_KEY
 
-SEMANA_ARCHIVOS = {
-    'semana_14': 'semana/datos-semana-14.xlsx',
-    'semana_15': 'semana/datos-semana-15.xlsx',
-    'semana_16': 'semana/datos-semana-16.xlsx'
-}
+# Inicialmente cargamos las semanas disponibles
+def cargar_semanas_disponibles():
+    semanas = {}
+    for filename in os.listdir(SEMANAS_FOLDER):
+        if filename.startswith('semana_completa_') and filename.endswith('.xlsx'):
+            semana_key = filename.replace('semana_completa_', '').replace('.xlsx', '')
+            semanas[f'semana_{semana_key}'] = os.path.join(SEMANAS_FOLDER, filename)
+    # Ordenar las semanas de manera ascendente
+    semanas_ordenadas = dict(sorted(semanas.items(), key=lambda x: int(x[0].split('_')[1])))
+    return semanas_ordenadas
+
+SEMANA_ARCHIVOS = cargar_semanas_disponibles()
 
 SEMANA_FECHAS = {
     'semana_14': '31-marzo a 6-abril',
     'semana_15': '7-abril a 13-abril',
-    'semana_16': '14-abril a 20-abril'
-}
-
-
-def cargar_detalle_generico(semana, metrica, cliente=None):
-    partes = semana.split('_')
-    if len(partes) != 2:
-        raise ValueError(f"Formato de semana inválido: {semana}")
-    
-    archivo = f"detalles/detalle-semana-{partes[1]}-{metrica}.xlsx"
-    print(f"Intentando abrir archivo: {archivo}")  # Debug
-    
-    if not os.path.exists(archivo):
-        raise FileNotFoundError(f"Archivo no encontrado: {archivo}")
-    
-    # Leer el archivo desde la celda A2
-    df = pd.read_excel(archivo, skiprows=1)
-    
-    # Mantener los valores originales sin convertir
-    df = df.astype(str)
-    
-    try:
-        if metrica == 'ns':
-            # Intenta seleccionar las columnas por nombre para NS
-            df = df[['c', 'des', 'Suma de ns_val', 'Suma de ns_val_ok', 'Suma de ns_p', 'Suma de malos']]
-        elif metrica == 'vok':
-            # Intenta seleccionar las columnas por nombre para VOK
-            df = df[['c', 'Des', 'vok_val', 'vok_val_ok', 'vok_p', 'malos']]
-    except KeyError as e:
-        print(f"Error al seleccionar columnas: {e}")
-        # Si falla, intenta con nombres alternativos o muestra todas las columnas
-        
-        # Mapeo de posibles nombres de columnas
-        column_mapping = {}
-        for i, col in enumerate(df.columns):
-            col_lower = str(col).lower()
-            if 'cliente' in col_lower or 'c' == col_lower:
-                column_mapping[col] = 'c'
-            elif 'desc' in col_lower or 'des' in col_lower:
-                column_mapping[col] = 'des' if metrica == 'ns' else 'Des'
-            elif 'ns_val' in col_lower and 'ok' not in col_lower:
-                column_mapping[col] = 'Suma de ns_val'
-            elif 'ns_val_ok' in col_lower or 'val_ok' in col_lower:
-                column_mapping[col] = 'Suma de ns_val_ok'
-            elif 'ns_p' in col_lower or 'ns_%' in col_lower:
-                column_mapping[col] = 'Suma de ns_p'
-            elif 'vok_val' in col_lower and 'ok' not in col_lower:
-                column_mapping[col] = 'vok_val'
-            elif 'vok_val_ok' in col_lower or 'val_ok' in col_lower:
-                column_mapping[col] = 'vok_val_ok'
-            elif 'vok_p' in col_lower or 'vok_%' in col_lower:
-                column_mapping[col] = 'vok_p'
-            elif 'malo' in col_lower:
-                column_mapping[col] = 'malos'
-        
-        # Renombrar columnas
-        df = df.rename(columns=column_mapping)
-    
-    # Limpiar nombres de columnas
-    df.columns = df.columns.str.strip()
-    
-    if cliente:
-        df['c'] = df['c'].astype(str).str.strip()
-        cliente = cliente.strip()
-        df = df[df['c'] == cliente]
-    
-    # Calcular el porcentaje y formatearlo como cadena con dos decimales
-    if metrica == 'ns':
-        df['Suma de ns_p'] = (df['Suma de ns_val_ok'].astype(float) / df['Suma de ns_val'].astype(float) * 100).map("{:.2f}".format)
-        # Filtrar filas donde 'Suma de malos' es mayor o igual a 1
-        df = df[df['Suma de malos'].astype(float) >= 1]
-    elif metrica == 'vok':
-        df['vok_p'] = (df['vok_val_ok'].astype(float) / df['vok_val'].astype(float) * 100).map("{:.2f}".format)
-        # Filtrar filas donde 'malos' es mayor o igual a 1
-        df = df[df['malos'].astype(float) >= 1]
-    
-    # Convertir a diccionario manteniendo los valores originales
-    result = df.to_dict(orient='records')
-    print(f"Registros encontrados: {len(result)}")  # Debug
-    
-    if result:
-        print("Primer registro:", result[0])
-    
-    return result
+    'semana_16': '14-abril a 20-abril',
+    'semana_17': '21-abril a 27-abril',
+    'semana_18': '28-abril a 4-mayo',
+    'semana_19': '5-mayo a 11-mayo',
+    'semana_20': '12-mayo a 18-mayo',
+    'semana_21': '19-mayo a 25-mayo',
+    'semana_22': '26-mayo a 1-junio',
+    'semana_23': '2-junio a 8-junio',
+    'semana_24': '9-junio a 15-junio',
+    'semana_25': '16-junio a 22-junio',
+    'semana_26': '23-junio a 29-junio',
+    'semana_27': '30-junio a 6-julio',
+    'semana_28': '7-julio a 13-julio',
+    'semana_29': '14-julio a 20-julio',
+    'semana_30': '21-julio a 27-julio',
+    'semana_31': '28-julio a 3-agosto',
+    'semana_32': '4-agosto a 10-agosto',
+    'semana_33': '11-agosto a 17-agosto',
+    'semana_34': '18-agosto a 24-agosto',
+    'semana_35': '25-agosto a 31-agosto',
+    }
 
 def cargar_datos(semana):
     excel_path = SEMANA_ARCHIVOS.get(semana)
     if not excel_path or not os.path.exists(excel_path):
         raise FileNotFoundError(f"Archivo no encontrado para {semana}")
-    df = pd.read_excel(excel_path)
+    
+    # Leer la hoja 'Resumen'
+    df = pd.read_excel(excel_path, sheet_name='Resumen')
     df.columns = [c.strip() for c in df.columns]
     df = df.rename(columns={'c': 'Cliente'})
     for col in ['N5_%', 'VOK_%']:
@@ -115,6 +61,100 @@ def cargar_datos(semana):
             if df[col].max() > 1.5:
                 df[col] = df[col] / 100
     return df
+
+def cargar_detalle_generico(semana, metrica, cliente=None):
+    excel_path = SEMANA_ARCHIVOS.get(semana)
+    if not excel_path or not os.path.exists(excel_path):
+        raise FileNotFoundError(f"Archivo no encontrado para {semana}")
+    
+    # Determinar la hoja a leer
+    sheet_name = 'Detalle_NS' if metrica == 'ns' else 'Detalle_VOK'
+    
+    try:
+        # Leer la hoja correspondiente - ahora sin skiprows ya que los encabezados están en A1
+        df = pd.read_excel(excel_path, sheet_name=sheet_name)
+        
+        # Limpiar nombres de columnas
+        df.columns = [str(col).strip() for col in df.columns]
+        
+        # Seleccionar columnas según la métrica
+        if metrica == 'ns':
+            required_columns = ['c', 'des', 'Suma de ns_val', 'ns_val_ok', 'ns_p', 'Suma de malos']
+            try:
+                df = df[required_columns]
+            except KeyError:
+                # Si no encuentra las columnas exactas, intentar encontrar coincidencias
+                column_mapping = {}
+                for col in df.columns:
+                    col_lower = str(col).lower()
+                    if 'cliente' in col_lower or col_lower == 'c':
+                        column_mapping[col] = 'c'
+                    elif 'desc' in col_lower or col_lower == 'des':
+                        column_mapping[col] = 'des'
+                    elif 'suma de ns_val' in col_lower and 'ok' not in col_lower:
+                        column_mapping[col] = 'Suma de ns_val'
+                    elif 'ns_val_ok' in col_lower:
+                        column_mapping[col] = 'ns_val_ok'
+                    elif 'ns_p' in col_lower:
+                        column_mapping[col] = 'ns_p'
+                    elif 'suma de malo' in col_lower:
+                        column_mapping[col] = 'Suma de malos'
+                
+                df = df.rename(columns=column_mapping)
+                df = df[required_columns]
+            
+        else:  # metrica == 'vok'
+            required_columns = ['c', 'Des', 'vok_val', 'vok_val_ok', 'vok_p', 'malos']
+            try:
+                df = df[required_columns]
+            except KeyError:
+                # Si no encuentra las columnas exactas, intentar encontrar coincidencias
+                column_mapping = {}
+                for col in df.columns:
+                    col_lower = str(col).lower()
+                    if 'cliente' in col_lower or col_lower == 'c':
+                        column_mapping[col] = 'c'
+                    elif 'desc' in col_lower:
+                        column_mapping[col] = 'Des'
+                    elif 'vok_val' in col_lower and 'ok' not in col_lower:
+                        column_mapping[col] = 'vok_val'
+                    elif 'vok_val_ok' in col_lower:
+                        column_mapping[col] = 'vok_val_ok'
+                    elif 'vok_p' in col_lower:
+                        column_mapping[col] = 'vok_p'
+                    elif 'malo' in col_lower:
+                        column_mapping[col] = 'malos'
+                
+                df = df.rename(columns=column_mapping)
+                df = df[required_columns]
+
+        # Filtrar por cliente si se especifica
+        if cliente:
+            df['c'] = df['c'].astype(str).str.strip()
+            cliente = str(cliente).strip()
+            df = df[df['c'] == cliente]
+        
+        # Calcular porcentajes
+        if metrica == 'ns':
+            df['ns_p'] = (df['ns_val_ok'].astype(float) / 
+                         df['Suma de ns_val'].astype(float) * 100).map("{:.2f}".format)
+            df = df[df['Suma de malos'].astype(float) >= 1]
+        else:
+            df['vok_p'] = (df['vok_val_ok'].astype(float) / 
+                          df['vok_val'].astype(float) * 100).map("{:.2f}".format)
+            df = df[df['malos'].astype(float) >= 1]
+        
+        result = df.to_dict(orient='records')
+        print(f"Registros encontrados: {len(result)}")
+        
+        if result:
+            print("Primer registro:", result[0])
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error al procesar el archivo: {str(e)}")
+        return []
 
 
 @app.route('/')
@@ -158,10 +198,10 @@ def detalle_metrica(metrica):
     try:
         semana = request.args.get('semana', 'semana_14')
         cliente = request.args.get('cliente')
-        print(f"Procesando detalle: metrica={metrica}, semana={semana}, cliente={cliente}")  # Debug
+        print(f"Procesando detalle: metrica={metrica}, semana={semana}, cliente={cliente}")
         
         data = cargar_detalle_generico(semana, metrica, cliente)
-        print(f"Datos cargados: {len(data)} registros")  # Debug
+        print(f"Datos cargados: {len(data)} registros")
         
         return render_template(
             f"detalle_{metrica}.html",
@@ -171,7 +211,7 @@ def detalle_metrica(metrica):
             titulo=metrica.upper()
         )
     except Exception as e:
-        print(f"Error: {str(e)}")  # Debug
+        print(f"Error: {str(e)}")
         return f"<h3>Error al cargar detalle: {str(e)}</h3>"
 
 @app.route('/grafica')
@@ -243,22 +283,22 @@ def grafica():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        # Verificar si al menos un archivo está presente en la solicitud
         if not any(request.files.get(key) for key in ['semanaFile', 'detalleNsFile', 'detalleVokFile', 'detalleCalidadRutaFile']):
             flash('No se seleccionó ningún archivo', 'error')
             return redirect(request.url)
         
-        # Obtener los archivos de la solicitud
         semana_file = request.files.get('semanaFile')
         detalle_ns_file = request.files.get('detalleNsFile')
         detalle_vok_file = request.files.get('detalleVokFile')
         detalle_calidad_ruta_file = request.files.get('detalleCalidadRutaFile')
         
-        # Procesar cada archivo si está presente
         if semana_file and allowed_file(semana_file.filename):
             semana_filepath = os.path.join(SEMANAS_FOLDER, semana_file.filename)
             semana_file.save(semana_filepath)
             flash(f'Archivo {semana_file.filename} subido exitosamente', 'success')
+            # Actualizar la lista de semanas disponibles
+            global SEMANA_ARCHIVOS
+            SEMANA_ARCHIVOS = cargar_semanas_disponibles()
         
         if detalle_ns_file and allowed_file(detalle_ns_file.filename):
             detalle_ns_filepath = os.path.join(DETALLES_FOLDER, detalle_ns_file.filename)
