@@ -79,7 +79,7 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
         
         # Seleccionar columnas según la métrica
         if metrica == 'ns':
-            required_columns = ['c', 'des', 'Suma de ns_val', 'ns_val_ok', 'ns_p', 'Suma de malos']
+            required_columns = ['c', 'des', 'Suma de ns_val', 'Suma de ns_val_ok', 'Suma de ns_p', 'Suma de malos']
             try:
                 df = df[required_columns]
             except KeyError:
@@ -93,10 +93,10 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
                         column_mapping[col] = 'des'
                     elif 'suma de ns_val' in col_lower and 'ok' not in col_lower:
                         column_mapping[col] = 'Suma de ns_val'
-                    elif 'ns_val_ok' in col_lower:
-                        column_mapping[col] = 'ns_val_ok'
-                    elif 'ns_p' in col_lower:
-                        column_mapping[col] = 'ns_p'
+                    elif 'suma de ns_val_ok' in col_lower:
+                        column_mapping[col] = 'Suma de ns_val_ok'
+                    elif 'suma de ns_p' in col_lower:
+                        column_mapping[col] = 'Suma de ns_p'
                     elif 'suma de malo' in col_lower:
                         column_mapping[col] = 'Suma de malos'
                 
@@ -136,7 +136,7 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
         
         # Calcular porcentajes
         if metrica == 'ns':
-            df['ns_p'] = (df['ns_val_ok'].astype(float) / 
+            df['Suma de ns_p'] = (df['Suma de ns_val_ok'].astype(float) / 
                          df['Suma de ns_val'].astype(float) * 100).map("{:.2f}".format)
             df = df[df['Suma de malos'].astype(float) >= 1]
         else:
