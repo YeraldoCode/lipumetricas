@@ -123,9 +123,15 @@
                         <tr><th>% Cumplimiento</th><td>{{ data[k].porcentaje }}</td></tr>
                     </table>
                     <div class="text-end">
+                        {% if k == 'cal_ruta' %}
+                        <a href="#" onclick="mostrarAlertaDesarrollo(event)" class="btn btn-primary btn-sm">
+                            Ver detalle {{ k|upper }}
+                        </a>
+                        {% else %}
                         <a href="{{ url_for('detalle_metrica', metrica=k, semana=semana, cliente=cliente) }}" class="btn btn-primary btn-sm">
                             Ver detalle {{ k|upper }}
                         </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -137,7 +143,8 @@
 <footer class="footer-custom bg-success text-white text-center py-3 mt-auto">
     LIPU MTY by Traxion © 2025. Todos los derechos reservados.
 </footer>
-
+<!-- Agregar SweetAlert2 antes de tus scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function cargarGrafica() {
         const metrica = document.getElementById('metrica').value;
@@ -159,6 +166,94 @@
     document.getElementById('metrica').addEventListener('change', cargarGrafica);
     window.addEventListener('DOMContentLoaded', cargarGrafica);
 </script>
+<!-- Tus scripts originales -->
+<script>
+    function cargarGrafica() {
+        const metrica = document.getElementById('metrica').value;
+        const cliente = document.querySelector('select[name="cliente"]').value;
+        const semana = document.querySelector('select[name="semana"]').value;
+        let url = `/grafica?metrica=${encodeURIComponent(metrica)}&semana=${encodeURIComponent(semana)}`;
+        if (cliente) url += `&cliente=${encodeURIComponent(cliente)}`;
+        fetch(url)
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('grafico').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                } else {
+                    Plotly.react('grafico', JSON.parse(data).data, JSON.parse(data).layout, {responsive: true});
+                }
+            });
+    }
 
+    document.getElementById('metrica').addEventListener('change', cargarGrafica);
+    window.addEventListener('DOMContentLoaded', cargarGrafica);
+
+    // Función para la alerta de desarrollo
+    function mostrarAlertaDesarrollo(event) {
+        event.preventDefault();
+        Swal.fire({
+            title: '<i class="bi bi-gear-fill me-2"></i>En Desarrollo',
+            html: '<div class="text-muted">Esta funcionalidad estará disponible próximamente</div>',
+            icon: 'info',
+            confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Entendido',
+            confirmButtonColor: '#198754',
+            background: '#fff',
+            backdrop: `
+                rgba(25, 135, 84, 0.1)
+                left top
+                no-repeat
+            `,
+            customClass: {
+                popup: 'shadow-lg border-0',
+                title: 'text-success fw-bold',
+                confirmButton: 'btn btn-success px-4',
+                htmlContainer: 'my-3'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+    }
+</script>
+
+<!-- Estilos adicionales para la alerta -->
+<style>
+.swal2-popup {
+    border-radius: 12px !important;
+    padding: 2rem !important;
+}
+
+.swal2-title {
+    font-size: 1.5rem !important;
+    letter-spacing: -0.5px !important;
+}
+
+.swal2-html-container {
+    font-size: 1.1rem !important;
+}
+
+.swal2-confirm {
+    font-weight: 500 !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 8px !important;
+}
+
+@media (max-width: 576px) {
+    .swal2-popup {
+        padding: 1.5rem !important;
+    }
+    
+    .swal2-title {
+        font-size: 1.25rem !important;
+    }
+    
+    .swal2-html-container {
+        font-size: 1rem !important;
+    }
+}
+</style>
 </body>
 </html>
