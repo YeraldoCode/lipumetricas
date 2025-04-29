@@ -178,7 +178,6 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
         print(f"Error al procesar el archivo: {str(e)}")
         return []
 
-
 @app.route('/')
 def index():
     try:
@@ -188,21 +187,36 @@ def index():
         cliente = request.args.get('cliente', '')
         if cliente:
             df = df[df['Cliente'] == cliente]
+        
+        # Calcular totales y porcentajes para NS
+        ns_total = df['N5_TOTAL'].sum() if not df.empty else 'N/A'
+        ns_buenos = df['N5_Buenos'].sum() if not df.empty else 'N/A'
+        ns_malos = df['n5_malos'].sum() if not df.empty else 'N/A'
+        ns_promedio = (ns_buenos / ns_total) if ns_total != 'N/A' and ns_total != 0 else 'N/A'
+        
+        # Calcular totales y porcentajes para VOK de la misma manera que NS
+        vok_total = df['VOK_Total'].sum() if not df.empty else 'N/A'
+        vok_buenos = df['VOK_Buenos'].sum() if not df.empty else 'N/A'
+        vok_malos = df['VOK_Malos'].sum() if not df.empty else 'N/A'
+        vok_promedio = (vok_buenos / vok_total) if vok_total != 'N/A' and vok_total != 0 else 'N/A'
+        
+        # Obtener primera fila para cal_ruta
         row = df.iloc[0] if not df.empty else {}
+        
         data = {
             'cliente': cliente or 'Todos',
             'semana': semana,
             'ns': {
-                'total': row.get('N5_TOTAL', 'N/A'),
-                'buenos': row.get('N5_Buenos', 'N/A'),
-                'malos': row.get('n5_malos', 'N/A'),
-                'porcentaje': f"{row.get('N5_%', 'N/A'):.2%}" if row.get('N5_%', None) not in [None, 'N/A'] else 'N/A'
+                'total': ns_total,
+                'buenos': ns_buenos,
+                'malos': ns_malos,
+                'porcentaje': f"{ns_promedio:.2%}" if ns_promedio != 'N/A' else 'N/A'
             },
             'vok': {
-                'total': row.get('VOK_Total', 'N/A'),
-                'buenos': row.get('VOK_Buenos', 'N/A'),
-                'malos': row.get('VOK_Malos', 'N/A'),
-                'porcentaje': f"{row.get('VOK_%', 'N/A'):.2%}" if row.get('VOK_%', None) not in [None, 'N/A'] else 'N/A'
+                'total': vok_total,
+                'buenos': vok_buenos,
+                'malos': vok_malos,
+                'porcentaje': f"{vok_promedio:.2%}" if vok_promedio != 'N/A' else 'N/A'
             },
             'cal_ruta': {
                 'total': row.get('CalRuta_Total', 'N/A'),
@@ -215,27 +229,6 @@ def index():
     except Exception as e:
         return f"<h3>Error al leer archivo: {str(e)}</h3>"
 
-@app.route('/detalle/<metrica>')
-def detalle_metrica(metrica):
-    try:
-        semana = request.args.get('semana', 'semana_14')
-        cliente = request.args.get('cliente')
-        print(f"Procesando detalle: metrica={metrica}, semana={semana}, cliente={cliente}")
-        
-        data = cargar_detalle_generico(semana, metrica, cliente)
-        print(f"Datos cargados: {len(data)} registros")
-        
-        return render_template(
-            f"detalle_{metrica}.html",
-            data=data,
-            semana=semana,
-            cliente=cliente,
-            titulo=metrica.upper()
-        )
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return f"<h3>Error al cargar detalle: {str(e)}</h3>"
-
 @app.route('/grafica')
 def grafica():
     try:
@@ -246,28 +239,28 @@ def grafica():
             df = df[df['Cliente'] == cliente]
         if df.empty:
             return jsonify({'error': 'No hay datos para este cliente'}), 400
-        row = df.iloc[0]
+            
         metrica = request.args.get('metrica', 'N5_%')
         import plotly.graph_objects as go
 
         if metrica == 'N5_%':
-            total = row.get('N5_TOTAL', 0)
-            buenos = row.get('N5_Buenos', 0)
-            malos = row.get('n5_malos', 0)
+            total = df['N5_TOTAL'].sum()
+            buenos = df['N5_Buenos'].sum()
+            malos = df['n5_malos'].sum()
             cumplimiento = buenos / total if total else 0
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"NS - Cumplimiento: {cumplimiento:.2%}"
         elif metrica == 'VOK_%':
-            total = row.get('VOK_Total', 0)
-            buenos = row.get('VOK_Buenos', 0)
-            malos = row.get('VOK_Malos', 0)
+            total = df['VOK_Total'].sum()
+            buenos = df['VOK_Buenos'].sum()
+            malos = df['VOK_Malos'].sum()
             cumplimiento = buenos / total if total else 0
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"VOK - Cumplimiento: {cumplimiento:.2%}"
         else:
-            total = row.get('CalRuta_Total', 0)
+            total = df['CalRuta_Total'].sum() if 'CalRuta_Total' in df.columns else 0
             valores = [total]
             etiquetas = ['Total']
             titulo = f"Calidad de Ruta"
@@ -300,6 +293,29 @@ def grafica():
         return jsonify(fig.to_json())
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+
+    
+@app.route('/detalle/<metrica>')
+def detalle_metrica(metrica):
+    try:
+        semana = request.args.get('semana', 'semana_14')
+        cliente = request.args.get('cliente')
+        print(f"Procesando detalle: metrica={metrica}, semana={semana}, cliente={cliente}")
+        
+        data = cargar_detalle_generico(semana, metrica, cliente)
+        print(f"Datos cargados: {len(data)} registros")
+        
+        return render_template(
+            f"detalle_{metrica}.html",
+            data=data,
+            semana=semana,
+            cliente=cliente,
+            titulo=metrica.upper()
+        )
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return f"<h3>Error al cargar detalle: {str(e)}</h3>"
     
 
 @app.route('/upload', methods=['GET', 'POST'])
