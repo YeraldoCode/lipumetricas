@@ -1,12 +1,34 @@
 from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
 import pandas as pd
+import secrets
+from dotenv import load_dotenv
 import os
 from utils.file_handler import allowed_file, combine_excel_files, save_file, read_excel
 from config import SEMANAS_FOLDER, DETALLES_FOLDER, SECRET_KEY
 
+#cargar variables de entorno
+load_dotenv()
+
+#Creacion de la aplicacion
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
 app.secret_key = SECRET_KEY
+
+ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
+if not ADMIN_TOKEN:
+    ADMIN_TOKEN = secrets.token_urlsafe(32)
+    print("\n" + "="*50)
+    print("⚠️ No se encontró token en .env")
+    print("🔐 Nuevo token generado:")
+    print(ADMIN_TOKEN)
+    print("\n💡 Agrega este token a tu archivo .env:")
+    print('ADMIN_TOKEN="' + ADMIN_TOKEN + '"')
+    print("\n📌 URL de acceso al panel:")
+    print(f"http://127.0.0.1:5000/lipu-admin-xyz123/{ADMIN_TOKEN}")
+    print("="*50 + "\n")
+
+app.config['ADMIN_TOKEN'] = ADMIN_TOKEN
+
 
 # Inicialmente cargamos las semanas disponibles
 def cargar_semanas_disponibles():
