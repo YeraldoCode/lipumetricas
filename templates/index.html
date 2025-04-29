@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Metricas Lipu MTY</title>
+    <title>Métricas LIPU MTY</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -27,6 +27,25 @@
             #grafico {
                 min-height: 250px;
             }
+            .navbar-brand span {
+                font-size: 1rem;
+            }
+            .card-header {
+                font-size: 0.9rem;
+                padding: 0.75rem 1rem;
+            }
+            .form-label {
+                font-size: 0.9rem;
+            }
+            .swal2-popup {
+                padding: 1.5rem !important;
+            }
+            .swal2-title {
+                font-size: 1.25rem !important;
+            }
+            .swal2-html-container {
+                font-size: 1rem !important;
+            }
         }
         .navbar-brand img {
             height: 40px;
@@ -42,26 +61,33 @@
         #uploadExcel {
             display: none;
         }
+        select.form-select {
+            transition: border-color 0.2s ease-in-out;
+        }
+        select.form-select:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm sticky-top">
     <div class="container justify-content-center">
         <a class="navbar-brand d-flex align-items-center" href="#">
             <img src="/static/images/logoLIPU.jpeg" alt="Lipu" class="me-2">
+            <span class="fw-bold fs-5 d-none d-sm-inline">Métricas LIPU MTY</span>
         </a>
     </div>
 </nav>
 
 <div class="container-lg py-4">
-    <!-- Filtros de aplicación -->
-    <form method="get" id="filtrosForm">
-        <div class="row g-3 align-items-end mb-4">
-            <!-- Selector de semana -->
+    <!-- Filtros -->
+    <form method="get" id="filtrosForm" class="bg-light rounded p-3 mb-4 shadow-sm">
+        <div class="row g-3 align-items-end">
             <div class="col-md-4 col-12">
-                <label for="selectSemana" class="form-label fw-semibold">Semana</label>
-                <select id="selectSemana" class="form-select" name="semana" onchange="this.form.submit();">
+                <label for="selectSemana" class="form-label fw-semibold text-success">Semana</label>
+                <select id="selectSemana" class="form-select border-success" name="semana" onchange="this.form.submit();">
                     {% for key, filename in semanas.items() %}
                     <option value="{{ key }}" {% if request.args.get('semana', 'semana_14') == key %}selected{% endif %}>
                         {{ key.replace('_', ' ') | capitalize }} ({{ semana_fechas[key] }})
@@ -69,23 +95,14 @@
                     {% endfor %}
                 </select>
             </div>
-            <!-- Selector de cliente -->
             <div class="col-md-4 col-12">
-                <label for="selectCliente" class="form-label fw-semibold">Cliente</label>
-                <select id="selectCliente" class="form-select" name="cliente" onchange="this.form.submit(); cargarGrafica();">
+                <label for="selectCliente" class="form-label fw-semibold text-success">Cliente</label>
+                <select id="selectCliente" class="form-select border-success" name="cliente" onchange="this.form.submit(); cargarGrafica();">
                     <option value="">Todos los clientes</option>
                     {% for c in clientes %}
                     <option value="{{ c }}" {% if request.args.get('cliente') == c %}selected{% endif %}>{{ c }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <!-- Botón de carga de archivo -->
-            <div class="col-md-4 col-12">
-                <label for="uploadExcel" class="form-label fw-light small text-muted">Cargar nueva semana</label>
-                <input type="file" id="uploadExcel" class="form-control" accept=".xlsx, .xls" style="display: none;">
-                <a href="{{ url_for('upload_file') }}" class="btn btn-link">
-                    <i class="bi bi-upload"></i> 
-                </a>
             </div>
         </div>
     </form>
@@ -110,25 +127,25 @@
     <!-- Tarjetas resumen -->
     <div class="row mb-4">
         {% for k in ['ns', 'vok', 'cal_ruta'] %}
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center text-uppercase fw-semibold">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card h-100 shadow-sm border-success">
+                <div class="card-header bg-success text-white text-uppercase fw-semibold">
                     {{ k }}
                 </div>
-                <div class="card-body p-2 text-break">
+                <div class="card-body p-2">
                     <table class="table table-sm mb-3">
                         <tr><th>Total</th><td>{{ data[k].total }}</td></tr>
                         <tr><th>Buenos</th><td>{{ data[k].buenos }}</td></tr>
                         <tr><th>Malos</th><td>{{ data[k].malos }}</td></tr>
-                        <tr><th>% Cumplimiento</th><td>{{ data[k].porcentaje }}</td></tr>
+                        <tr><th>% Cumplimiento</th><td class="fw-bold text-success">{{ data[k].porcentaje }}</td></tr>
                     </table>
                     <div class="text-end">
                         {% if k == 'cal_ruta' %}
-                        <a href="#" onclick="mostrarAlertaDesarrollo(event)" class="btn btn-primary btn-sm">
+                        <a href="#" onclick="mostrarAlertaDesarrollo(event)" class="btn btn-success btn-sm">
                             Ver detalle {{ k|upper }}
                         </a>
                         {% else %}
-                        <a href="{{ url_for('detalle_metrica', metrica=k, semana=semana, cliente=cliente) }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url_for('detalle_metrica', metrica=k, semana=semana, cliente=cliente) }}" class="btn btn-success btn-sm">
                             Ver detalle {{ k|upper }}
                         </a>
                         {% endif %}
@@ -140,10 +157,10 @@
     </div>
 </div>
 
-<footer class="footer-custom bg-success text-white text-center py-3 mt-auto">
+<footer class="footer-custom bg-success text-white text-center py-3 mt-auto shadow-sm">
     LIPU MTY by Traxion © 2025. Todos los derechos reservados.
 </footer>
-<!-- Agregar SweetAlert2 antes de tus scripts -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function cargarGrafica() {
@@ -165,30 +182,7 @@
 
     document.getElementById('metrica').addEventListener('change', cargarGrafica);
     window.addEventListener('DOMContentLoaded', cargarGrafica);
-</script>
-<!-- Tus scripts originales -->
-<script>
-    function cargarGrafica() {
-        const metrica = document.getElementById('metrica').value;
-        const cliente = document.querySelector('select[name="cliente"]').value;
-        const semana = document.querySelector('select[name="semana"]').value;
-        let url = `/grafica?metrica=${encodeURIComponent(metrica)}&semana=${encodeURIComponent(semana)}`;
-        if (cliente) url += `&cliente=${encodeURIComponent(cliente)}`;
-        fetch(url)
-            .then(resp => resp.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById('grafico').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-                } else {
-                    Plotly.react('grafico', JSON.parse(data).data, JSON.parse(data).layout, {responsive: true});
-                }
-            });
-    }
 
-    document.getElementById('metrica').addEventListener('change', cargarGrafica);
-    window.addEventListener('DOMContentLoaded', cargarGrafica);
-
-    // Función para la alerta de desarrollo
     function mostrarAlertaDesarrollo(event) {
         event.preventDefault();
         Swal.fire({
@@ -198,11 +192,7 @@
             confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Entendido',
             confirmButtonColor: '#198754',
             background: '#fff',
-            backdrop: `
-                rgba(25, 135, 84, 0.1)
-                left top
-                no-repeat
-            `,
+            backdrop: `rgba(25, 135, 84, 0.1) left top no-repeat`,
             customClass: {
                 popup: 'shadow-lg border-0',
                 title: 'text-success fw-bold',
@@ -218,42 +208,5 @@
         });
     }
 </script>
-
-<!-- Estilos adicionales para la alerta -->
-<style>
-.swal2-popup {
-    border-radius: 12px !important;
-    padding: 2rem !important;
-}
-
-.swal2-title {
-    font-size: 1.5rem !important;
-    letter-spacing: -0.5px !important;
-}
-
-.swal2-html-container {
-    font-size: 1.1rem !important;
-}
-
-.swal2-confirm {
-    font-weight: 500 !important;
-    padding: 0.75rem 1.5rem !important;
-    border-radius: 8px !important;
-}
-
-@media (max-width: 576px) {
-    .swal2-popup {
-        padding: 1.5rem !important;
-    }
-    
-    .swal2-title {
-        font-size: 1.25rem !important;
-    }
-    
-    .swal2-html-container {
-        font-size: 1rem !important;
-    }
-}
-</style>
 </body>
 </html>

@@ -4,29 +4,29 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h3">Panel de Administración</h2>
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="h3 fw-bold text-success mb-2 mb-md-0">Panel de Administración</h2>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-success">
             <i class="bi bi-house"></i> Volver al inicio
         </a>
     </div>
 
-    <div class="row">
-        <!-- Sección de carga -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">Cargar Archivo</h5>
+    <div class="row g-4">
+        <!-- Carga de archivo -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow rounded-3 border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Cargar Archivo Excel</h5>
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('admin_upload') }}" method="post" enctype="multipart/form-data">
                         <div class="upload-zone mb-3" id="dropZone">
-                            <i class="bi bi-cloud-upload display-4"></i>
-                            <h5>Arrastra y suelta tu archivo Excel</h5>
-                            <p class="text-muted">o haz clic para seleccionar</p>
+                            <i class="bi bi-cloud-upload display-5 text-success mb-2"></i>
+                            <h6 class="fw-semibold">Arrastra y suelta el archivo</h6>
+                            <p class="text-muted small">o haz clic para seleccionar</p>
                             <input type="file" class="d-none" id="fileInput" name="file" accept=".xlsx">
                         </div>
-                        <div id="filePreview" class="d-none alert alert-info mb-3">
+                        <div id="filePreview" class="d-none alert alert-success mb-3">
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-file-earmark-excel me-2"></i>
                                 <span id="fileName"></span>
@@ -34,27 +34,27 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-upload me-2"></i>Subir Archivo
+                            <i class="bi bi-upload me-2"></i> Subir Archivo
                         </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Lista de archivos -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="card-title mb-0">Archivos Existentes</h5>
+        <!-- Archivos existentes -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow rounded-3 border-0">
+                <div class="card-header bg-light border-bottom border-success">
+                    <h5 class="mb-0 text-success">Archivos Existentes</h5>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                <div class="card-body px-0">
+                    <div class="table-responsive px-3">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-success">
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Modificado</th>
-                                    <th>Acciones</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,12 +62,16 @@
                                 <tr>
                                     <td>{{ file.name }}</td>
                                     <td>{{ file.modified }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary" 
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-success"
                                                 onclick="showModifyModal('{{ file.name }}')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                     </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No hay archivos disponibles.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -79,14 +83,14 @@
 
         <!-- Registro de actividad -->
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">Actividad Reciente</h5>
+            <div class="card shadow rounded-3 border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Actividad Reciente</h5>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
+                <div class="card-body px-0">
+                    <div class="table-responsive px-3">
+                        <table class="table table-striped align-middle">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Acción</th>
@@ -102,6 +106,10 @@
                                     <td>{{ log.filename }}</td>
                                     <td>{{ log.details }}</td>
                                 </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No hay actividad reciente.</td>
+                                </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -112,22 +120,25 @@
     </div>
 </div>
 
-<!-- Modal para modificar archivo -->
-<div class="modal fade" id="modifyModal" tabindex="-1">
+<!-- Modal -->
+<div class="modal fade" id="modifyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Modificar Archivo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content shadow">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title text-success">Modificar Archivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <form id="modifyForm" method="post">
-                    <input type="file" class="form-control mb-3" name="new_file" accept=".xlsx">
+                    <div class="mb-3">
+                        <label class="form-label">Nuevo archivo</label>
+                        <input type="file" class="form-control" name="new_file" accept=".xlsx">
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Detalles del cambio</label>
-                        <textarea class="form-control" name="details" required></textarea>
+                        <textarea class="form-control" name="details" rows="3" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <button type="submit" class="btn btn-success w-100">Guardar Cambios</button>
                 </form>
             </div>
         </div>
@@ -136,33 +147,72 @@
 
 <style>
 .upload-zone {
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
+    border: 2px dashed #198754;
+    border-radius: 1rem;
     padding: 2rem;
+    background-color: #f8f9fa;
     text-align: center;
-    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .upload-zone:hover {
-    border-color: #0d6efd;
-    background: rgba(13, 110, 253, 0.05);
+    background-color: #e6f4ea;
+    border-color: #157347;
 }
 
 .upload-zone.dragover {
-    border-color: #198754;
-    background: rgba(25, 135, 84, 0.05);
+    background-color: #d1f2dc;
+    border-color: #14532d;
 }
 </style>
 
 <script>
-// Funcionalidad de drag & drop y modal
+// Drag & drop funcionalidad
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const filePreview = document.getElementById('filePreview');
 const fileName = document.getElementById('fileName');
 const removeFile = document.getElementById('removeFile');
 
-// ... (resto del JavaScript que ya tienes) ...
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        fileName.textContent = files[0].name;
+        filePreview.classList.remove('d-none');
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+        filePreview.classList.remove('d-none');
+    }
+});
+
+removeFile.addEventListener('click', () => {
+    fileInput.value = '';
+    filePreview.classList.add('d-none');
+});
+
+function showModifyModal(fileName) {
+    const modal = new bootstrap.Modal(document.getElementById('modifyModal'));
+    const form = document.getElementById('modifyForm');
+    form.action = `/admin/modify/${fileName}`;
+    modal.show();
+}
 </script>
 {% endblock %}
