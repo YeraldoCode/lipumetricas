@@ -1,10 +1,4 @@
-from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
-import pandas as pd
-import secrets
-from dotenv import load_dotenv
-import os
-from utils.file_handler import allowed_file, combine_excel_files, save_file, read_excel
-from config import SEMANAS_FOLDER, DETALLES_FOLDER, SECRET_KEY
+from flask import Flask, flash, redirect, render_template, request, jsonify, url_for, session, abort
 import pandas as pd
 import secrets
 from dotenv import load_dotenv
@@ -14,7 +8,8 @@ from config import SEMANAS_FOLDER, DETALLES_FOLDER, SECRET_KEY
 from datetime import datetime
 import json
 from werkzeug.utils import secure_filename
-
+from functools import wraps
+import logging
 
 #cargar variables de entorno
 load_dotenv()
@@ -24,6 +19,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = SEMANAS_FOLDER
 app.secret_key = SECRET_KEY
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # Inicialmente cargamos las semanas disponibles
@@ -353,6 +350,21 @@ def upload_file():
     
     return render_template('admin_upload.html')
 
+# decorador para proteger ruta de administrador
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not os.path.exists(SEMANAS_FOLDER):
+            try:
+                os.makedirs(SEMANAS_FOLDER)
+            except Exception as e:
+                logger.error(f"Error al crear el directorio {SEMANAS_FOLDER}: {str(e)}")
+                abort(500)
+            return f(*args, **kwargs)
+    return decorated_function
+
+
+
 # Panel de Administración
 @app.route('/admin-panel')
 def admin_dashboard():
@@ -383,6 +395,8 @@ def admin_dashboard():
         return f"<h1>Error al cargar el panel</h1><p>{str(e)}</p>"
 
 
+
+#cargar archivos 
 @app.route('/admin-upload', methods=['POST'])
 def admin_upload():
     try:
@@ -416,7 +430,9 @@ def admin_upload():
     except Exception as e:
         flash(f'Error al subir el archivo: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
+    
 
+#modificar archivos
 @app.route('/admin-modify', methods=['POST'])
 def admin_modify():
     try:
@@ -450,6 +466,8 @@ def admin_modify():
         flash(f'Error al modificar el archivo: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
 
+
+#eliminar archivo 
 @app.route('/admin-delete/<filename>')
 def admin_delete(filename):
     try:
