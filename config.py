@@ -30,13 +30,3 @@ ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 # Configuración adicional
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max-limit
 
-# Imprimir token de administrador si se genera uno nuevo
-if not os.environ.get('ADMIN_TOKEN'):
-    print("============================================")
-    print("🔐 Token de administrador generado:")
-    print(ADMIN_TOKEN)
-    print("============================================")
-    print(f"URL de acceso: /lipu-admin-xyz123/{ADMIN_TOKEN}")
-    print("============================================")
-    print("⚠️  Guarda este token en un lugar seguro")
-    print("============================================")
