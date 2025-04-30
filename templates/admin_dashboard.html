@@ -36,6 +36,10 @@
                         <button type="submit" class="btn btn-success w-100">
                             <i class="bi bi-upload me-2"></i> Subir Archivo
                         </button>
+                        <button type="button" class="btn btn-outline-success w-100 mt-3" id="semanaInfoBtn">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Información del Formato Excel
+                        </button>
                     </form>
                 </div>
             </div>
@@ -145,6 +149,161 @@
     </div>
 </div>
 
+<div class="modal fade" id="semanaInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-excel me-2"></i>
+                    Estructura del Archivo Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="accordionExample">
+                    <!-- Sección Resumen -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                <i class="bi bi-table me-2"></i>
+                                Hoja: Resumen
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <p class="text-muted">Datos generales agregados de la semana</p>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-success">
+                                            <tr>
+                                                <th>Nombre del Encabezado</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>c</td>
+                                                <td>Identificador del cliente</td>
+                                            </tr>
+                                            <tr>
+                                                <td>N5_TOTAL</td>
+                                                <td>Total de registros NS</td>
+                                            </tr>
+                                            <tr>
+                                                <td>N5_Buenos</td>
+                                                <td>Registros NS correctos</td>
+                                            </tr>
+                                            <tr>
+                                                <td>N5_Malos</td>
+                                                <td>Registros NS con errores</td>
+                                            </tr>
+                                            <tr>
+                                                <td>N5_%</td>
+                                                <td>Porcentaje de efectividad NS</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Detalle_NS -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Hoja: Detalle_NS
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <p class="text-muted">Métricas de Nivel de Servicio</p>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-success">
+                                            <tr>
+                                                <th>Nombre Encabezado</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>c</td>
+                                                <td>cliente</td>
+                                            </tr>
+                                            <tr>
+                                                <td>(des)</td>
+                                                <td>ruta</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ns_val</td>
+                                                <td>Valor del nivel de servicio</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ns_val_ok</td>
+                                                <td>Validación del nivel de servicio</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Detalle_VOK -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                <i class="bi bi-clipboard-data me-2"></i>
+                                Hoja: Detalle_VOK
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <p class="text-muted">Validación de Origen y Kilometraje</p>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-success">
+                                            <tr>
+                                                <th>Nombre del Encabezado</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>(c)</td>
+                                                <td>Identificador del cliente</td>
+                                            </tr>
+                                            <tr>
+                                                <td>(Des)</td>
+                                                <td>ruta </td>
+                                            </tr>
+                                            <tr>
+                                                <td>vok_val</td>
+                                                <td>Valor de validación</td>
+                                            </tr>
+                                            <tr>
+                                                <td>vok_val_ok</td>
+                                                <td>Estado de la validación</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    <i class="bi bi-check-lg me-2"></i>Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .upload-zone {
     border: 2px dashed #198754;
@@ -215,4 +374,87 @@ function showModifyModal(fileName) {
     modal.show();
 }
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos del DOM
+        const infoBtn = document.getElementById('semanaInfoBtn');
+        const modal = new bootstrap.Modal(document.getElementById('semanaInfoModal'));
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('semanaFile');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        
+        // Funcionalidad del modal
+        infoBtn.addEventListener('click', () => modal.show());
+    
+        // Función para formatear el tamaño del archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    
+        // Función para manejar la selección de archivo
+        function handleFileSelect(file) {
+            if (file) {
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                dropZone.style.display = 'none';
+                filePreview.classList.add('show');
+            }
+        }
+    
+        // Click en la zona de drop
+        dropZone.addEventListener('click', () => fileInput.click());
+    
+        // Cambio en el input file
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFileSelect(file);
+            }
+        });
+    
+        // Remover archivo
+        removeFile.addEventListener('click', () => {
+            fileInput.value = '';
+            filePreview.classList.remove('show');
+            dropZone.style.display = 'block';
+        });
+    
+        // Drag and Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+    
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('border-primary');
+            });
+        });
+    
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('border-primary');
+            });
+        });
+    
+        dropZone.addEventListener('drop', (e) => {
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(file);
+            }
+        });
+    });
+    </script>
 {% endblock %}
