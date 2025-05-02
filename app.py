@@ -225,25 +225,36 @@ def index():
 @app.route('/grafica')
 def grafica():
     try:
+        # Obtiene el parámetro 'semana' de la URL, por defecto 'semana_14'
         semana = request.args.get('semana', 'semana_14')
+        # Carga los datos del archivo Excel correspondiente a la semana
         df = cargar_datos(semana)
+        # Obtiene el parámetro 'cliente' de la URL
         cliente = request.args.get('cliente', '')
+        
+        # Filtra el DataFrame si se especificó un cliente
         if cliente:
             df = df[df['Cliente'] == cliente]
+        # Verifica si hay datos después del filtrado
         if df.empty:
             return jsonify({'error': 'No hay datos para este cliente'}), 400
             
+        # Obtiene el tipo de métrica a mostrar, por defecto 'N5_%'
         metrica = request.args.get('metrica', 'N5_%')
         import plotly.graph_objects as go
 
+        # Configuración para métrica de Nivel de Servicio (NS)
         if metrica == 'N5_%':
             total = df['N5_TOTAL'].sum()
             buenos = df['N5_Buenos'].sum()
             malos = df['n5_malos'].sum()
+            # Calcula el porcentaje de cumplimiento
             cumplimiento = buenos / total if total else 0
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"NS - Cumplimiento: {cumplimiento:.2%}"
+        
+        # Configuración para métrica de Viajes OK (VOK)
         elif metrica == 'VOK_%':
             total = df['VOK_Total'].sum()
             buenos = df['VOK_Buenos'].sum()
@@ -252,39 +263,51 @@ def grafica():
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"VOK - Cumplimiento: {cumplimiento:.2%}"
+        
+        # Configuración para métrica de Calidad de Ruta
         else:
             total = df['CalRuta_Total'].sum() if 'CalRuta_Total' in df.columns else 0
             valores = [total]
             etiquetas = ['Total']
             titulo = f"Calidad de Ruta"
 
+        # Crear la gráfica de dona usando Plotly
         fig = go.Figure(data=[go.Pie(
             labels=etiquetas,
             values=valores,
-            hole=0.4,
-            marker=dict(colors=['#6A75CF']*len(valores), line=dict(color='white', width=2)),
-            textinfo='percent',
-            textposition='outside',
-            showlegend=False
+            hole=0.4,  # Tamaño del agujero central (0.4 = 40%)
+            # Nuevos colores: Verde para buenos, Rojo para malos
+            marker=dict(
+                colors=['#198754', '#dc3545'] if len(valores) > 1 else ['#198754'],  
+                line=dict(color='white', width=2)
+            ),
+            textinfo='percent',  # Mostrar porcentajes
+            textposition='outside',  # Texto fuera de la dona
+            showlegend=False  # Ocultar leyenda
         )])
 
+        # Configurar el diseño de la gráfica
         fig.update_layout(
-            title_text=titulo,
+            title_text=titulo,  # Título de la gráfica
+            # Márgenes: izquierda=20, derecha=120, arriba=40, abajo=20
             margin=dict(l=20, r=120, t=40, b=20),
+            # Agregar anotación con el total
             annotations=[
                 dict(
                     text=f"<b>Total:</b> {sum(valores)}",
-                    x=1.2, y=0.5,
+                    x=1.2, y=0.5,  # Posición de la anotación
                     xref="paper", yref="paper",
-                    showarrow=False,
+                    showarrow=False,  # Sin flecha
                     align="left",
-                    font=dict(size=14)
+                    font=dict(size=14)  # Tamaño de fuente
                 )
             ]
         )
 
+        # Convertir la figura a JSON y retornar
         return jsonify(fig.to_json())
     except Exception as e:
+        # Manejar cualquier error y retornar código 400
         return jsonify({'error': str(e)}), 400
 
 
