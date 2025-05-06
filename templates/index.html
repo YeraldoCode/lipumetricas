@@ -135,8 +135,10 @@
                 <div class="card-body p-2">
                     <table class="table table-sm mb-3">
                         <tr><th>Total</th><td>{{ data[k].total }}</td></tr>
-                        <tr><th>Buenos</th><td>{{ data[k].buenos }}</td></tr>
-                        <tr><th>Malos</th><td>{{ data[k].malos }}</td></tr>
+                        {% if k != 'cal_ruta' %}
+                            <tr><th>Buenos</th><td>{{ data[k].buenos }}</td></tr>
+                            <tr><th>Malos</th><td>{{ data[k].malos }}</td></tr>
+                        {% endif %}
                         <tr><th>% Cumplimiento</th><td class="fw-bold text-success">{{ data[k].porcentaje }}</td></tr>
                     </table>
                     <div class="text-end">
@@ -155,6 +157,7 @@
         </div>
         {% endfor %}
     </div>
+    
 </div>
 
 <footer class="footer-custom bg-success text-white text-center py-3 mt-auto shadow-sm">

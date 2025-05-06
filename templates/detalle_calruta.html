@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle {{ titulo }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap + Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            height: 36px;
+        }
+
+        .btn-volver {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .content-wrapper {
+            flex: 1 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.3rem;
+        }
+
+        .table th, .table td {
+            font-size: 0.85rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table thead th {
+            background-color: #198754;
+            color: white;
+        }
+
+        .table-responsive {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        footer {
+            background-color: #198754;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            margin-top: auto;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 576px) {
+            .section-header h3 {
+                font-size: 1.1rem;
+            }
+
+            .section-header p {
+                font-size: 0.9rem;
+            }
+
+            .table th, .table td {
+                font-size: 0.75rem;
+                padding: 0.4rem;
+            }
+        }
+
+        #grafico_ns {
+            min-height: 300px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 576px) {
+            #grafico_ns {
+                min-height: 250px;
+            }
+        }
+
+        .swal2-popup {
+            font-family: 'Segoe UI', sans-serif !important;
+        }
+
+        .swal-wide {
+            width: 400px !important;
+        }
+
+        .swal2-icon {
+            border-color: #198754 !important;
+            color: #198754 !important;
+        }
+
+        .swal2-title {
+            color: #198754 !important;
+            font-size: 1.5rem !important;
+        }
+
+        .swal2-html-container {
+            font-size: 1rem !important;
+        }
+
+        @media (max-width: 576px) {
+            .swal-wide {
+                width: 300px !important;
+            }
+            
+            .swal2-title {
+                font-size: 1.3rem !important;
+            }
+            
+            .swal2-html-container {
+                font-size: 0.9rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/static/images/logoLIPU.jpeg" alt="Lipu">
+            </a>
+            <a href="/" class="btn btn-outline-light btn-volver">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Contenido -->
+    <h3>Detalle de Calidad de Ruta - {{ cliente }}</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID Ruta</th>
+            <th>Total Paradas</th>
+            <th>Paradas Entregadas</th>
+            <th>Paradas No Entregadas</th>
+            <th>% Calidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.id_ruta }}</td>
+            <td>{{ row.total_paradas }}</td>
+            <td>{{ row.total_paradas_enc }}</td>
+            <td>{{ row.total_paradas_no_enc }}</td>
+            <td>{{ row.cr }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    <!-- Footer -->
+    <footer>
+        LIPU MTY by Traxion © 2025. Todos los derechos reservados.
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const tableRows = document.querySelectorAll('table tbody tr');
+                const data = Array.from(tableRows)
+                    .filter(row => !row.classList.contains('text-muted'))  // omitir fila "No hay datos"
+                    .map(row => {
+                        const cells = row.querySelectorAll('td');
+                        return {
+                            des: cells.length === 6 ? cells[1].textContent.trim() : cells[0].textContent.trim(),
+                            ns_val: parseInt(cells[cells.length - 4].textContent) || 0,
+                            ns_val_ok: parseInt(cells[cells.length - 3].textContent) || 0,
+                            ns_p: parseFloat(cells[cells.length - 2].textContent) || 0,
+                            malos: parseInt(cells[cells.length - 1].textContent) || 0
+                        };
+                    });
+        
+                if (data.length === 0) {
+                    console.log('No hay datos disponibles para el gráfico');
+                    return;
+                }
+        
+                const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
+        
+                // Mostrar alerta si no hay cliente seleccionado
+                if (!clienteSeleccionado) {
+                    Swal.fire({
+                        title: '¡Información!',
+                        text: 'Selecciona un cliente para ver sus gráficos detallados por ruta.',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#198754',
+                        customClass: {
+                            popup: 'swal-wide',
+                            title: 'text-success fw-bold',
+                        }
+                    });
+                }
+        
+                let labels = [], totales = [], buenos = [], malos = [], porcentajes = [];
+        
+                if (clienteSeleccionado) {
+                    labels = data.map(row => row.des);
+                    totales = data.map(row => row.ns_val);
+                    buenos = data.map(row => row.ns_val_ok);
+                    malos = data.map(row => row.malos);
+                    porcentajes = data.map(row => row.ns_p);
+                } else {
+                    // Agrupar todo en una sola barra
+                    const total = data.reduce((acc, row) => acc + row.ns_val, 0);
+                    const total_ok = data.reduce((acc, row) => acc + row.ns_val_ok, 0);
+                    const total_malos = data.reduce((acc, row) => acc + row.malos, 0);
+                    const porcentaje_ok = total > 0 ? ((total_ok / total) * 100).toFixed(2) : 0;
+        
+                    labels = ['Resumen General'];
+                    totales = [total];
+                    buenos = [total_ok];
+                    malos = [total_malos];
+                    porcentajes = [parseFloat(porcentaje_ok)];
+                }
+        
+                const ctx = document.getElementById('grafico_ns');
+                if (!ctx) {
+                    console.error('No se encontró el elemento canvas para el gráfico');
+                    return;
+                }
+    
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Total NS',
+                                data: totales,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                order: 3
+                            },
+                            {
+                                label: 'NS OK',
+                                data: buenos,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                order: 2
+                            },
+                            {
+                                label: 'NS Malos',
+                                data: malos,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                order: 1
+                            },
+                            {
+                                label: 'Porcentaje OK',
+                                data: porcentajes,
+                                type: 'line',
+                                borderColor: 'rgba(255, 159, 64, 1)',
+                                borderWidth: 2,
+                                fill: false,
+                                yAxisID: 'porcentaje',
+                                order: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de NS'
+                                }
+                            },
+                            porcentaje: {
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Porcentaje OK'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y;
+                                        if (context.dataset.label === 'Porcentaje OK') {
+                                            return `${label}: ${value}%`;
+                                        }
+                                        return `${label}: ${value}`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+    
+            } catch (error) {
+                console.error('Error al crear el gráfico:', error);
+            }
+        });
+    </script>
+    
+    </body>
+    </html>
+    

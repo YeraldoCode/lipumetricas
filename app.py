@@ -49,16 +49,6 @@ SEMANA_FECHAS = {
     'semana_23': '2-junio a 8-junio',
     'semana_24': '9-junio a 15-junio',
     'semana_25': '16-junio a 22-junio',
-    'semana_26': '23-junio a 29-junio',
-    'semana_27': '30-junio a 6-julio',
-    'semana_28': '7-julio a 13-julio',
-    'semana_29': '14-julio a 20-julio',
-    'semana_30': '21-julio a 27-julio',
-    'semana_31': '28-julio a 3-agosto',
-    'semana_32': '4-agosto a 10-agosto',
-    'semana_33': '11-agosto a 17-agosto',
-    'semana_34': '18-agosto a 24-agosto',
-    'semana_35': '25-agosto a 31-agosto',
     }
 
 def cargar_datos(semana):
@@ -70,35 +60,42 @@ def cargar_datos(semana):
     df = pd.read_excel(excel_path, sheet_name='Resumen')
     df.columns = [c.strip() for c in df.columns]
     df = df.rename(columns={'c': 'Cliente'})
-    for col in ['N5_%', 'VOK_%']:
+    for col in ['N5_%', 'VOK_%', 'cr']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.replace('%','').str.replace(',','.').astype(float)
             if df[col].max() > 1.5:
                 df[col] = df[col] / 100
+    # Asegurarse de que 'rutas' sea numérico
+    if 'rutas' in df.columns:
+        df['rutas'] = pd.to_numeric(df['rutas'], errors='coerce').fillna(0)
     return df
+
+
 
 def cargar_detalle_generico(semana, metrica, cliente=None):
     excel_path = SEMANA_ARCHIVOS.get(semana)
     if not excel_path or not os.path.exists(excel_path):
         raise FileNotFoundError(f"Archivo no encontrado para {semana}")
-    
-    # Determinar la hoja a leer
-    sheet_name = 'Detalle_NS' if metrica == 'ns' else 'Detalle_VOK'
-    
+
+    # Determinar la hoja a leer según la métrica
+    if metrica == 'ns':
+        sheet_name = 'Detalle_NS'
+    elif metrica == 'vok':
+        sheet_name = 'Detalle_VOK'
+    elif metrica == 'cal_ruta':
+        sheet_name = 'Cal_Ruta'
+    else:
+        raise ValueError("Métrica no soportada")
+
     try:
-        # Leer la hoja correspondiente - ahora sin skiprows ya que los encabezados están en A1
         df = pd.read_excel(excel_path, sheet_name=sheet_name)
-        
-        # Limpiar nombres de columnas
         df.columns = [str(col).strip() for col in df.columns]
-        
-        # Seleccionar columnas según la métrica
+
         if metrica == 'ns':
             required_columns = ['c', 'des', 'Suma de ns_val', 'Suma de ns_val_ok', 'Suma de ns_p', 'Suma de malos']
             try:
                 df = df[required_columns]
             except KeyError:
-                # Si no encuentra las columnas exactas, intentar encontrar coincidencias
                 column_mapping = {}
                 for col in df.columns:
                     col_lower = str(col).lower()
@@ -114,16 +111,14 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
                         column_mapping[col] = 'Suma de ns_p'
                     elif 'suma de malo' in col_lower:
                         column_mapping[col] = 'Suma de malos'
-                
                 df = df.rename(columns=column_mapping)
                 df = df[required_columns]
-            
-        else:  # metrica == 'vok'
+
+        elif metrica == 'vok':
             required_columns = ['c', 'Des', 'vok_val', 'vok_val_ok', 'vok_p', 'malos']
             try:
                 df = df[required_columns]
             except KeyError:
-                # Si no encuentra las columnas exactas, intentar encontrar coincidencias
                 column_mapping = {}
                 for col in df.columns:
                     col_lower = str(col).lower()
@@ -139,63 +134,150 @@ def cargar_detalle_generico(semana, metrica, cliente=None):
                         column_mapping[col] = 'vok_p'
                     elif 'malo' in col_lower:
                         column_mapping[col] = 'malos'
-                
                 df = df.rename(columns=column_mapping)
                 df = df[required_columns]
 
-        # Filtrar por cliente si se especifica
-        if cliente:
-            df['c'] = df['c'].astype(str).str.strip()
-            cliente = str(cliente).strip()
-            df = df[df['c'] == cliente]
-        
-        # Calcular porcentajes
+        elif metrica == 'cal_ruta':
+            # Mapeo flexible para columnas de detalle de calidad de ruta
+            column_mapping = {}
+            for col in df.columns:
+                col_lower = col.lower()
+                if col_lower in ['c', 'cliente']:
+                    column_mapping[col] = 'cliente'
+                elif col_lower == 'rutas':
+                    column_mapping[col] = 'rutas'
+                elif col_lower == 'cr':
+                    column_mapping[col] = 'cr'
+            df = df.rename(columns=column_mapping)
+
+            # Filtrar por cliente si aplica
+            if cliente and 'cliente' in df.columns:
+                df['cliente'] = df['cliente'].astype(str).str.strip()
+                cliente = str(cliente).strip()
+                df = df[df['cliente'] == cliente]
+
+            # Solo dejar las columnas relevantes
+            df = df[['cliente', 'rutas', 'cr']]
+
+            # Asegurarse de que 'rutas' sea numérico
+            df['rutas'] = pd.to_numeric(df['rutas'], errors='coerce').fillna(0)
+            # Asegurarse de que 'cr' sea numérico y esté en porcentaje
+            df['cr'] = df['cr'].astype(str).str.replace('%','').str.replace(',','.').astype(float)
+            if df['cr'].max() > 1.5:
+                df['cr'] = df['cr'] / 100
+            df['cr'] = (df['cr'] * 100).map("{:.2f}%")
+
+            # Filtrar por cliente si aplica
+            if cliente and 'cliente' in df.columns:
+                df['cliente'] = df['cliente'].astype(str).str.strip()
+                cliente = str(cliente).strip()
+                df = df[df['cliente'] == cliente]
+
+            # Asegurarse de que 'cr' sea numérico y esté en proporción
+            if 'cr' in df.columns:
+                df['cr'] = df['cr'].astype(str).str.replace('%','').str.replace(',','.').astype(float)
+                if df['cr'].max() > 1.5:
+                    df['cr'] = df['cr'] / 100
+
+        # Calcular porcentajes y filtrar según la métrica
         if metrica == 'ns':
-            df['Suma de ns_p'] = (df['Suma de ns_val_ok'].astype(float) / 
-                         df['Suma de ns_val'].astype(float) * 100).map("{:.2f}".format)
+            df['Suma de ns_p'] = (df['Suma de ns_val_ok'].astype(float) /
+                                  df['Suma de ns_val'].astype(float) * 100).map("{:.2f}".format)
             df = df[df['Suma de malos'].astype(float) >= 1]
-        else:
-            df['vok_p'] = (df['vok_val_ok'].astype(float) / 
-                          df['vok_val'].astype(float) * 100).map("{:.2f}".format)
+        elif metrica == 'vok':
+            df['vok_p'] = (df['vok_val_ok'].astype(float) /
+                           df['vok_val'].astype(float) * 100).map("{:.2f}".format)
             df = df[df['malos'].astype(float) >= 1]
-        
+        elif metrica == 'cal_ruta':
+            # Puedes filtrar o calcular campos adicionales aquí si lo necesitas
+            pass
+
         result = df.to_dict(orient='records')
         print(f"Registros encontrados: {len(result)}")
-        
         if result:
             print("Primer registro:", result[0])
-        
         return result
-        
+
     except Exception as e:
         print(f"Error al procesar el archivo: {str(e)}")
         return []
+    
+def cargar_datos_calruta(semana, cliente=None):
+    excel_path = SEMANA_ARCHIVOS.get(semana)
+    if not excel_path or not os.path.exists(excel_path):
+        raise FileNotFoundError(f"Archivo no encontrado para {semana}")
+
+    # Leer la hoja 'Carta_cr'
+    df = pd.read_excel(excel_path, sheet_name='Carta_cr')
+    df.columns = [c.strip() for c in df.columns]
+
+    # Convertir 'cr' a decimal si está en porcentaje
+    df['cr'] = df['cr'].astype(str).str.replace(',', '.').str.replace('%', '')  # Reemplazar comas y eliminar '%'
+    df['cr'] = pd.to_numeric(df['cr'], errors='coerce')  # Convertir a número
+    if df['cr'].max() > 1:  # Si los valores son mayores a 1, están en porcentaje
+        df['cr'] = df['cr'] / 100
+
+    # Filtrar por cliente si se especifica
+    if cliente:
+        df = df[df['cliente'] == cliente]
+
+    # Calcular el total de rutas
+    calruta_total = df['rutas'].sum()
+
+    # Calcular el porcentaje general (promedio ponderado)
+    if calruta_total > 0:
+        calruta_promedio = (df['rutas'] * df['cr']).sum() / calruta_total
+    else:
+        calruta_promedio = 0  # Si no hay rutas, el promedio es 0
+
+    return calruta_total, calruta_promedio
+
+@app.route('/detalle_calruta')
+def detalle_calruta():
+    try:
+        semana = request.args.get('semana', 'semana_14')
+        cliente = request.args.get('cliente', None)
+        df = cargar_detalle_generico(semana, 'cal_ruta', cliente)
+
+        return render_template('detalle_calruta.html', data=df.to_dict(orient='records'), cliente=cliente, semana=semana)
+    except Exception as e:
+        return f"<h3>Error al cargar detalle de calidad de ruta: {str(e)}</h3>"
 
 @app.route('/')
 def index():
     try:
         semana = request.args.get('semana', 'semana_14')
+        cliente = request.args.get('cliente', '')
         df = cargar_datos(semana)
         clientes = df['Cliente'].dropna().unique()
-        cliente = request.args.get('cliente', '')
-        if cliente:
-            df = df[df['Cliente'] == cliente]
-        
+
         # Calcular totales y porcentajes para NS
         ns_total = df['N5_TOTAL'].sum() if not df.empty else 'N/A'
         ns_buenos = df['N5_Buenos'].sum() if not df.empty else 'N/A'
         ns_malos = df['n5_malos'].sum() if not df.empty else 'N/A'
         ns_promedio = (ns_buenos / ns_total) if ns_total != 'N/A' and ns_total != 0 else 'N/A'
-        
-        # Calcular totales y porcentajes para VOK de la misma manera que NS
+
+        # Calcular totales y porcentajes para VOK
         vok_total = df['VOK_Total'].sum() if not df.empty else 'N/A'
         vok_buenos = df['VOK_Buenos'].sum() if not df.empty else 'N/A'
         vok_malos = df['VOK_Malos'].sum() if not df.empty else 'N/A'
         vok_promedio = (vok_buenos / vok_total) if vok_total != 'N/A' and vok_total != 0 else 'N/A'
-        
-        # Obtener primera fila para cal_ruta
-        row = df.iloc[0] if not df.empty else {}
-        
+
+        # Calcular totales y porcentajes para CALRUTA
+        if cliente == '':  # Todos los clientes
+            calruta_total, calruta_promedio = cargar_datos_calruta(semana)
+            try:
+                calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
+                if os.path.exists(calruta_file):
+                    with open(calruta_file, 'r') as f:
+                        calruta_data = json.load(f)
+                    if semana in calruta_data:
+                        calruta_promedio = calruta_data[semana] / 100
+            except Exception:
+                pass  # Si no existe el archivo o el valor no es válido, usar el cálculo automático
+        else:  # Cliente específico
+            calruta_total, calruta_promedio = cargar_datos_calruta(semana, cliente)
+
         data = {
             'cliente': cliente or 'Todos',
             'semana': semana,
@@ -212,10 +294,8 @@ def index():
                 'porcentaje': f"{vok_promedio:.2%}" if vok_promedio != 'N/A' else 'N/A'
             },
             'cal_ruta': {
-                'total': row.get('CalRuta_Total', 'N/A'),
-                'buenos': 'N/A',
-                'malos': 'N/A',
-                'porcentaje': 'N/A'
+                'total': calruta_total,
+                'porcentaje': f"{calruta_promedio:.2%}" if calruta_promedio != 'N/A' else 'N/A'
             }
         }
         return render_template('index.html', data=data, clientes=clientes, request=request, semanas=SEMANA_ARCHIVOS, semana=semana, cliente=cliente, semana_fechas=SEMANA_FECHAS)
@@ -225,36 +305,25 @@ def index():
 @app.route('/grafica')
 def grafica():
     try:
-        # Obtiene el parámetro 'semana' de la URL, por defecto 'semana_14'
         semana = request.args.get('semana', 'semana_14')
-        # Carga los datos del archivo Excel correspondiente a la semana
         df = cargar_datos(semana)
-        # Obtiene el parámetro 'cliente' de la URL
         cliente = request.args.get('cliente', '')
-        
-        # Filtra el DataFrame si se especificó un cliente
         if cliente:
             df = df[df['Cliente'] == cliente]
-        # Verifica si hay datos después del filtrado
         if df.empty:
             return jsonify({'error': 'No hay datos para este cliente'}), 400
             
-        # Obtiene el tipo de métrica a mostrar, por defecto 'N5_%'
         metrica = request.args.get('metrica', 'N5_%')
         import plotly.graph_objects as go
 
-        # Configuración para métrica de Nivel de Servicio (NS)
         if metrica == 'N5_%':
             total = df['N5_TOTAL'].sum()
             buenos = df['N5_Buenos'].sum()
             malos = df['n5_malos'].sum()
-            # Calcula el porcentaje de cumplimiento
             cumplimiento = buenos / total if total else 0
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"NS - Cumplimiento: {cumplimiento:.2%}"
-        
-        # Configuración para métrica de Viajes OK (VOK)
         elif metrica == 'VOK_%':
             total = df['VOK_Total'].sum()
             buenos = df['VOK_Buenos'].sum()
@@ -263,51 +332,56 @@ def grafica():
             valores = [buenos, malos]
             etiquetas = ['Buenos', 'Malos']
             titulo = f"VOK - Cumplimiento: {cumplimiento:.2%}"
-        
-        # Configuración para métrica de Calidad de Ruta
+        elif metrica == 'CAL_RUTA':
+            if 'rutas' in df.columns and 'cr' in df.columns:
+                total = df['rutas'].sum()
+                buenas = (df['rutas'] * df['cr']).sum()
+                malas = total - buenas
+                cumplimiento = buenas / total if total else 0
+                valores = [buenas, malas]
+                etiquetas = ['Buenas', 'Con Problemas']
+                titulo = f"Calidad de Ruta - Cumplimiento: {cumplimiento:.2%}"
+            else:
+                total = 0
+                valores = [0]
+                etiquetas = ['Total']
+                titulo = "Calidad de Ruta"
         else:
-            total = df['CalRuta_Total'].sum() if 'CalRuta_Total' in df.columns else 0
-            valores = [total]
+            total = 0
+            valores = [0]
             etiquetas = ['Total']
-            titulo = f"Calidad de Ruta"
+            titulo = "Métrica desconocida"
 
-        # Crear la gráfica de dona usando Plotly
         fig = go.Figure(data=[go.Pie(
             labels=etiquetas,
             values=valores,
-            hole=0.4,  # Tamaño del agujero central (0.4 = 40%)
-            # Nuevos colores: Verde para buenos, Rojo para malos
+            hole=0.4,
             marker=dict(
-                colors=['#198754', '#dc3545'] if len(valores) > 1 else ['#198754'],  
+                colors=['#198754', '#dc3545'] if len(valores) > 1 else ['#198754'],
                 line=dict(color='white', width=2)
             ),
-            textinfo='percent',  # Mostrar porcentajes
-            textposition='outside',  # Texto fuera de la dona
-            showlegend=False  # Ocultar leyenda
+            textinfo='percent',
+            textposition='outside',
+            showlegend=False
         )])
 
-        # Configurar el diseño de la gráfica
         fig.update_layout(
-            title_text=titulo,  # Título de la gráfica
-            # Márgenes: izquierda=20, derecha=120, arriba=40, abajo=20
+            title_text=titulo,
             margin=dict(l=20, r=120, t=40, b=20),
-            # Agregar anotación con el total
             annotations=[
                 dict(
                     text=f"<b>Total:</b> {sum(valores)}",
-                    x=1.2, y=0.5,  # Posición de la anotación
+                    x=1.2, y=0.5,
                     xref="paper", yref="paper",
-                    showarrow=False,  # Sin flecha
+                    showarrow=False,
                     align="left",
-                    font=dict(size=14)  # Tamaño de fuente
+                    font=dict(size=14)
                 )
             ]
         )
 
-        # Convertir la figura a JSON y retornar
         return jsonify(fig.to_json())
     except Exception as e:
-        # Manejar cualquier error y retornar código 400
         return jsonify({'error': str(e)}), 400
 
 
@@ -391,7 +465,6 @@ def admin_required(f):
 # Panel de Administración
 @app.route('/admin-panel')
 def admin_dashboard():
-    print("Intentando acceder al panel de administración")  # Debug print
     try:
         # Obtener lista de archivos con su información
         files = []
@@ -402,22 +475,17 @@ def admin_dashboard():
                     'name': filename,
                     'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S')
                 })
-        
-        print(f"Archivos encontrados: {len(files)}")  # Debug print
-        
+
         # Obtener logs de actividad
         logs = get_activity_logs()
-        
-        print("Intentando renderizar template")  # Debug print
+
+        # Pasar las semanas disponibles al template
         return render_template('admin_dashboard.html', 
-                            files=files,
-                            logs=logs)
+                               files=files,
+                               logs=logs,
+                               semanas=SEMANA_ARCHIVOS)
     except Exception as e:
-        print(f"Error en el panel de administración: {str(e)}")  # Debug print
-        # En lugar de redireccionar, mostramos el error
         return f"<h1>Error al cargar el panel</h1><p>{str(e)}</p>"
-
-
 
 #cargar archivos 
 @app.route('/admin-upload', methods=['POST'])
@@ -554,9 +622,39 @@ def get_activity_logs():
         print(f"Error al leer logs: {str(e)}")
         return []
 
+@app.route('/update_calruta_percentage', methods=['POST'])
+def update_calruta_percentage():
+    try:
+        semana = request.form.get('semana')
+        calruta_percentage = request.form.get('calruta_percentage')
+        if semana and calruta_percentage:
+            try:
+                calruta_percentage = float(calruta_percentage)
+                if not (0 <= calruta_percentage <= 100):
+                    raise ValueError("El porcentaje debe estar entre 0 y 100.")
+            except ValueError:
+                flash('Por favor, ingrese un porcentaje válido entre 0 y 100.', 'error')
+                return redirect(url_for('admin_dashboard'))
 
+            # Leer o crear el archivo JSON
+            calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
+            if os.path.exists(calruta_file):
+                with open(calruta_file, 'r') as f:
+                    calruta_data = json.load(f)
+            else:
+                calruta_data = {}
 
+            # Actualizar el porcentaje para la semana seleccionada
+            calruta_data[semana] = calruta_percentage
+            with open(calruta_file, 'w') as f:
+                json.dump(calruta_data, f, indent=4)
 
+            flash(f'Porcentaje de Calidad de Ruta para {semana} actualizado correctamente.', 'success')
+        else:
+            flash('Por favor, seleccione una semana y proporcione un porcentaje válido.', 'error')
+    except Exception as e:
+        flash(f'Error al actualizar el porcentaje: {str(e)}', 'error')
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
