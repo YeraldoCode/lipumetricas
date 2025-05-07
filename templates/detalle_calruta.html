@@ -90,23 +90,6 @@
             }
         }
 
-        #grafico_ns {
-            min-height: 300px;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        @media (max-width: 576px) {
-            #grafico_ns {
-                min-height: 250px;
-            }
-        }
-
         .swal2-popup {
             font-family: 'Segoe UI', sans-serif !important;
         }
@@ -157,37 +140,93 @@
             </a>
         </div>
     </nav>
-    
+
     <!-- Contenido -->
-    <h3>Detalle de Calidad de Ruta - {{ cliente }}</h3>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>ID Ruta</th>
-            <th>Total Paradas</th>
-            <th>Paradas Entregadas</th>
-            <th>Paradas No Entregadas</th>
-            <th>% Calidad</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in data %}
-        <tr>
-            <td>{{ row.id_ruta }}</td>
-            <td>{{ row.total_paradas }}</td>
-            <td>{{ row.total_paradas_enc }}</td>
-            <td>{{ row.total_paradas_no_enc }}</td>
-            <td>{{ row.cr }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="content-wrapper">
+        <div class="container">
+            <div class="section-header mb-4 text-center">
+                <h3 class="fw-bold text-success">Detalle {{ titulo }}</h3>
+                <p class="text-muted mb-1">Semana: <strong>{{ semana.replace('_', ' ')|capitalize }}</strong></p>
+                {% if cliente %}
+                <p class="text-muted">Cliente: <strong>{{ cliente }}</strong></p>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive shadow-sm bg-white">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>ID Ruta</th>
+                            <th>Total Paradas</th>
+                            <th>Paradas Encontradas</th>
+                            <th>Paradas No Encontradas</th>
+                            <th>Calidad de Ruta (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if data %}
+                            {% for row in data %}
+                                {% if row['Paradas No Encuestadas'] > 0 %}
+                                <tr>
+                                    <td>{{ row['Cliente'] }}</td>
+                                    <td>{{ row['ID Ruta'] }}</td>
+                                    <td>{{ row['Total Paradas'] }}</td>
+                                    <td>{{ row['Paradas Encuestadas'] }}</td>
+                                    <td>{{ row['Paradas No Encuestadas'] }}</td>
+                                    <td>{{ (row['Calidad de Ruta'] * 100)|round(2) }}%</td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No hay datos disponibles</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Gráfico de Calidad de Ruta -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center">
+                        <h5 class="card-title mb-0">Gráfico de Calidad de Ruta</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="grafico_calidad_ruta"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         LIPU MTY by Traxion © 2025. Todos los derechos reservados.
     </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
+
+            // Mostrar alerta si no hay cliente seleccionado
+            if (!clienteSeleccionado) {
+                Swal.fire({
+                    title: '¡Información!',
+                    text: 'Selecciona un cliente para ver sus gráficos detallados por ruta.',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#198754',
+                    customClass: {
+                        popup: 'swal-wide',
+                        title: 'text-success fw-bold',
+                    }
+                });
+            }
+
+            // Gráfico de Calidad de Ruta
             try {
                 const tableRows = document.querySelectorAll('table tbody tr');
                 const data = Array.from(tableRows)
@@ -195,96 +234,81 @@
                     .map(row => {
                         const cells = row.querySelectorAll('td');
                         return {
-                            des: cells.length === 6 ? cells[1].textContent.trim() : cells[0].textContent.trim(),
-                            ns_val: parseInt(cells[cells.length - 4].textContent) || 0,
-                            ns_val_ok: parseInt(cells[cells.length - 3].textContent) || 0,
-                            ns_p: parseFloat(cells[cells.length - 2].textContent) || 0,
-                            malos: parseInt(cells[cells.length - 1].textContent) || 0
+                            cliente: cells[0].textContent.trim(),
+                            idRuta: cells[1].textContent.trim(),
+                            totalParadas: parseInt(cells[2].textContent) || 0,
+                            paradasEncuestadas: parseInt(cells[3].textContent) || 0,
+                            paradasNoEncuestadas: parseInt(cells[4].textContent) || 0,
+                            calidadRuta: parseFloat(cells[5].textContent) || 0
                         };
                     });
-        
+
                 if (data.length === 0) {
                     console.log('No hay datos disponibles para el gráfico');
                     return;
                 }
-        
+
                 const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
-        
-                // Mostrar alerta si no hay cliente seleccionado
-                if (!clienteSeleccionado) {
-                    Swal.fire({
-                        title: '¡Información!',
-                        text: 'Selecciona un cliente para ver sus gráficos detallados por ruta.',
-                        icon: 'info',
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#198754',
-                        customClass: {
-                            popup: 'swal-wide',
-                            title: 'text-success fw-bold',
-                        }
-                    });
-                }
-        
-                let labels = [], totales = [], buenos = [], malos = [], porcentajes = [];
-        
+
+                let labels = [], totalParadas = [], paradasEncuestadas = [], paradasNoEncuestadas = [], calidadRuta = [];
+
                 if (clienteSeleccionado) {
-                    labels = data.map(row => row.des);
-                    totales = data.map(row => row.ns_val);
-                    buenos = data.map(row => row.ns_val_ok);
-                    malos = data.map(row => row.malos);
-                    porcentajes = data.map(row => row.ns_p);
+                    labels = data.map(row => row.idRuta);
+                    totalParadas = data.map(row => row.totalParadas);
+                    paradasEncuestadas = data.map(row => row.paradasEncuestadas);
+                    paradasNoEncuestadas = data.map(row => row.paradasNoEncuestadas);
+                    calidadRuta = data.map(row => row.calidadRuta);
                 } else {
-                    // Agrupar todo en una sola barra
-                    const total = data.reduce((acc, row) => acc + row.ns_val, 0);
-                    const total_ok = data.reduce((acc, row) => acc + row.ns_val_ok, 0);
-                    const total_malos = data.reduce((acc, row) => acc + row.malos, 0);
-                    const porcentaje_ok = total > 0 ? ((total_ok / total) * 100).toFixed(2) : 0;
-        
+                    const total = data.reduce((acc, row) => acc + row.totalParadas, 0);
+                    const encuestadas = data.reduce((acc, row) => acc + row.paradasEncuestadas, 0);
+                    const noEncuestadas = data.reduce((acc, row) => acc + row.paradasNoEncuestadas, 0);
+                    const calidadPromedio = total > 0 ? ((encuestadas / total) * 100).toFixed(2) : 0;
+
                     labels = ['Resumen General'];
-                    totales = [total];
-                    buenos = [total_ok];
-                    malos = [total_malos];
-                    porcentajes = [parseFloat(porcentaje_ok)];
+                    totalParadas = [total];
+                    paradasEncuestadas = [encuestadas];
+                    paradasNoEncuestadas = [noEncuestadas];
+                    calidadRuta = [parseFloat(calidadPromedio)];
                 }
-        
-                const ctx = document.getElementById('grafico_ns');
+
+                const ctx = document.getElementById('grafico_calidad_ruta');
                 if (!ctx) {
                     console.error('No se encontró el elemento canvas para el gráfico');
                     return;
                 }
-    
+
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [
                             {
-                                label: 'Total NS',
-                                data: totales,
+                                label: 'Total Paradas',
+                                data: totalParadas,
                                 backgroundColor: 'rgba(54, 162, 235, 0.5)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1,
                                 order: 3
                             },
                             {
-                                label: 'NS OK',
-                                data: buenos,
+                                label: 'Paradas Encuestadas',
+                                data: paradasEncuestadas,
                                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1,
                                 order: 2
                             },
                             {
-                                label: 'NS Malos',
-                                data: malos,
+                                label: 'Paradas No Encuestadas',
+                                data: paradasNoEncuestadas,
                                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
                                 borderWidth: 1,
                                 order: 1
                             },
                             {
-                                label: 'Porcentaje OK',
-                                data: porcentajes,
+                                label: 'Calidad de Ruta (%)',
+                                data: calidadRuta,
                                 type: 'line',
                                 borderColor: 'rgba(255, 159, 64, 1)',
                                 borderWidth: 2,
@@ -302,31 +326,31 @@
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Cantidad de NS'
-                                }
-                            },
-                            porcentaje: {
-                                position: 'right',
-                                beginAtZero: true,
-                                max: 100,
-                                title: {
-                                    display: true,
-                                    text: 'Porcentaje OK'
-                                }
+                                    text: 'Cantidad de Paradas'
                             }
                         },
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.dataset.label || '';
-                                        const value = context.parsed.y;
-                                        if (context.dataset.label === 'Porcentaje OK') {
-                                            return `${label}: ${value}%`;
-                                        }
-                                        return `${label}: ${value}`;
+                        porcentaje: {
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Calidad de Ruta (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (context.dataset.label === 'Calidad de Ruta (%)') {
+                                        return `${label}: ${value}%`;
                                     }
+                                    return `${label}: ${value}`;
                                 }
+                            }
                             },
                             legend: {
                                 position: 'top'
@@ -334,13 +358,12 @@
                         }
                     }
                 });
-    
+
             } catch (error) {
                 console.error('Error al crear el gráfico:', error);
             }
-        });
+        }); // Corrección: se agregó el punto y coma para cerrar correctamente la instrucción
     </script>
-    
-    </body>
-    </html>
-    
+
+</body>
+</html>

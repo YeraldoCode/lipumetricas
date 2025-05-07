@@ -237,9 +237,39 @@ def detalle_calruta():
     try:
         semana = request.args.get('semana', 'semana_14')
         cliente = request.args.get('cliente', None)
-        df = cargar_detalle_generico(semana, 'cal_ruta', cliente)
 
-        return render_template('detalle_calruta.html', data=df.to_dict(orient='records'), cliente=cliente, semana=semana)
+        # Leer el archivo correspondiente a la semana
+        excel_path = SEMANA_ARCHIVOS.get(semana)
+        if not excel_path or not os.path.exists(excel_path):
+            raise FileNotFoundError(f"Archivo no encontrado para {semana}")
+
+        # Leer la hoja 'Detalle_cr'
+        df = pd.read_excel(excel_path, sheet_name='Detalle_cr')
+        df.columns = [c.strip() for c in df.columns]
+
+        # Renombrar columnas para consistencia
+        df = df.rename(columns={
+            'cliente': 'Cliente',
+            'id_ruta': 'ID Ruta',
+            'total_paradas': 'Total Paradas',
+            'total_paradas_enc': 'Paradas Encuestadas',
+            'total_paradas_no_enc': 'Paradas No Encuestadas',
+            'cr': 'Calidad de Ruta'
+        })
+
+        # Convertir 'Calidad de Ruta' a porcentaje si es necesario
+        df['Calidad de Ruta'] = df['Calidad de Ruta'].astype(str).str.replace(',', '.').astype(float)
+        if df['Calidad de Ruta'].max() > 1:
+            df['Calidad de Ruta'] = df['Calidad de Ruta'] * 100
+
+        # Filtrar por cliente si se especifica
+        if cliente:
+            df = df[df['Cliente'] == cliente]
+
+        # Convertir los datos a un diccionario para pasarlos al template
+        data = df.to_dict(orient='records')
+
+        return render_template('detalle_calruta.html', data=data, cliente=cliente, semana=semana, titulo='Calidad de Ruta')
     except Exception as e:
         return f"<h3>Error al cargar detalle de calidad de ruta: {str(e)}</h3>"
 

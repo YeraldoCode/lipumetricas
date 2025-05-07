@@ -143,7 +143,7 @@
                     </table>
                     <div class="text-end">
                         {% if k == 'cal_ruta' %}
-                        <a href="#" onclick="mostrarAlertaDesarrollo(event)" class="btn btn-success btn-sm">
+                        <a href="{{ url_for('detalle_calruta', semana=semana, cliente=cliente) }}" class="btn btn-success btn-sm">
                             Ver detalle {{ k|upper }}
                         </a>
                         {% else %}
@@ -157,7 +157,8 @@
         </div>
         {% endfor %}
     </div>
-    
+
+
 </div>
 
 <footer class="footer-custom bg-success text-white text-center py-3 mt-auto shadow-sm">
@@ -210,6 +211,24 @@
             }
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectSemana = document.getElementById('selectSemana');
+        if (selectSemana) {
+            const opciones = selectSemana.options;
+            if (opciones.length > 0) {
+                const ultimaSemana = opciones[opciones.length - 1];
+                if (!ultimaSemana.selected) {
+                    ultimaSemana.selected = true; // Seleccionar la última semana
+                    // Evitar múltiples solicitudes al servidor
+                    if (selectSemana.dataset.initialized !== 'true') {
+                        selectSemana.dataset.initialized = 'true';
+                        selectSemana.dispatchEvent(new Event('change', { bubbles: true })); // Disparar el evento para cargar los datos
+                    }
+                }
+            }
+        }
+    });
 </script>
 </body>
 </html>
