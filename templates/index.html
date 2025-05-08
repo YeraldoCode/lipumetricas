@@ -167,12 +167,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function cargarGrafica() {
+    function cargarGraficaYTarjetas() {
         const metrica = document.getElementById('metrica').value;
         const cliente = document.querySelector('select[name="cliente"]').value;
         const semana = document.querySelector('select[name="semana"]').value;
         let url = `/grafica?metrica=${encodeURIComponent(metrica)}&semana=${encodeURIComponent(semana)}`;
         if (cliente) url += `&cliente=${encodeURIComponent(cliente)}`;
+
+        // Actualizar gráfica
         fetch(url)
             .then(resp => resp.json())
             .then(data => {
@@ -182,10 +184,48 @@
                     Plotly.react('grafico', JSON.parse(data).data, JSON.parse(data).layout, {responsive: true});
                 }
             });
+
+        // Actualizar tarjetas
+        fetch(`/tarjetas?semana=${encodeURIComponent(semana)}&cliente=${encodeURIComponent(cliente)}`)
+            .then(resp => resp.json())
+            .then(data => {
+                const tarjetasContainer = document.querySelector('.row.mb-4');
+                tarjetasContainer.innerHTML = '';
+                ['ns', 'vok', 'cal_ruta'].forEach(k => {
+                    const tarjetaHtml = `
+                        <div class="col-md-4 col-sm-6 mb-3">
+                            <div class="card h-100 shadow-sm border-success">
+                                <div class="card-header bg-success text-white text-uppercase fw-semibold">
+                                    ${k} - ${cliente || 'Todos los clientes'}
+                                </div>
+                                <div class="card-body p-2">
+                                    <table class="table table-sm mb-3">
+                                        <tr><th>Total</th><td>${Math.round(data[k].total)}</td></tr>
+                                        ${k !== 'cal_ruta' ? `<tr><th>Buenos</th><td>${Math.round(data[k].buenos)}</td></tr><tr><th>Malos</th><td>${Math.round(data[k].malos)}</td></tr>` : ''}
+                                        <tr><th>% Cumplimiento</th><td class="fw-bold text-success">${data[k].porcentaje}</td></tr>
+                                    </table>
+                                    <div class="text-end">
+                                        ${k === 'cal_ruta' ? 
+                                            `<a href="/detalle_calruta?semana=${encodeURIComponent(semana)}&cliente=${encodeURIComponent(cliente)}" class="btn btn-success btn-sm">Ver detalle ${k.toUpperCase()}</a>` : 
+                                            `<a href="/detalle_metrica?metrica=${k}&semana=${encodeURIComponent(semana)}&cliente=${encodeURIComponent(cliente)}" class="btn btn-success btn-sm">Ver detalle ${k.toUpperCase()}</a>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    tarjetasContainer.insertAdjacentHTML('beforeend', tarjetaHtml);
+                });
+            });
     }
 
-    document.getElementById('metrica').addEventListener('change', cargarGrafica);
-    window.addEventListener('DOMContentLoaded', cargarGrafica);
+    document.getElementById('metrica').addEventListener('change', cargarGraficaYTarjetas);
+    document.querySelector('select[name="cliente"]').addEventListener('change', function() {
+        cargarGraficaYTarjetas();
+        this.blur(); // Asegura que el dropdown no quede bloqueado
+    });
+    document.querySelector('select[name="semana"]').addEventListener('change', cargarGraficaYTarjetas);
+
+    window.addEventListener('DOMContentLoaded', cargarGraficaYTarjetas);
 
     function mostrarAlertaDesarrollo(event) {
         event.preventDefault();
@@ -217,14 +257,10 @@
         if (selectSemana) {
             const opciones = selectSemana.options;
             if (opciones.length > 0) {
-                const ultimaSemana = opciones[opciones.length - 1];
-                if (!ultimaSemana.selected) {
-                    ultimaSemana.selected = true; // Seleccionar la última semana
-                    // Evitar múltiples solicitudes al servidor
-                    if (selectSemana.dataset.initialized !== 'true') {
-                        selectSemana.dataset.initialized = 'true';
-                        selectSemana.dispatchEvent(new Event('change', { bubbles: true })); // Disparar el evento para cargar los datos
-                    }
+                const semanaSeleccionada = opciones[selectSemana.selectedIndex];
+                if (!semanaSeleccionada.selected) {
+                    // No forzar la selección de la última semana
+                    selectSemana.dataset.initialized = 'true';
                 }
             }
         }

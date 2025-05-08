@@ -279,34 +279,29 @@ def index():
         semana = request.args.get('semana', 'semana_14')
         cliente = request.args.get('cliente', '')
         df = cargar_datos(semana)
+
+        # Obtener la lista completa de clientes antes de filtrar
         clientes = df['Cliente'].dropna().unique()
 
+        # Filtrar los datos por cliente si se selecciona uno
+        if cliente:
+            df = df[df['Cliente'] == cliente]
+
         # Calcular totales y porcentajes para NS
-        ns_total = df['N5_TOTAL'].sum() if not df.empty else 'N/A'
-        ns_buenos = df['N5_Buenos'].sum() if not df.empty else 'N/A'
-        ns_malos = df['n5_malos'].sum() if not df.empty else 'N/A'
-        ns_promedio = (ns_buenos / ns_total) if ns_total != 'N/A' and ns_total != 0 else 'N/A'
+        ns_total = round(df['N5_TOTAL'].sum()) if not df.empty else 'N/A'
+        ns_buenos = round(df['N5_Buenos'].sum()) if not df.empty else 'N/A'
+        ns_malos = round(df['n5_malos'].sum()) if not df.empty else 'N/A'
+        ns_promedio = (df['N5_Buenos'].sum() / df['N5_TOTAL'].sum()) if not df.empty and df['N5_TOTAL'].sum() != 0 else 'N/A'
 
         # Calcular totales y porcentajes para VOK
-        vok_total = df['VOK_Total'].sum() if not df.empty else 'N/A'
-        vok_buenos = df['VOK_Buenos'].sum() if not df.empty else 'N/A'
-        vok_malos = df['VOK_Malos'].sum() if not df.empty else 'N/A'
-        vok_promedio = (vok_buenos / vok_total) if vok_total != 'N/A' and vok_total != 0 else 'N/A'
+        vok_total = round(df['VOK_Total'].sum()) if not df.empty else 'N/A'
+        vok_buenos = round(df['VOK_Buenos'].sum()) if not df.empty else 'N/A'
+        vok_malos = round(df['VOK_Malos'].sum()) if not df.empty else 'N/A'
+        vok_promedio = (df['VOK_Buenos'].sum() / df['VOK_Total'].sum()) if not df.empty and df['VOK_Total'].sum() != 0 else 'N/A'
 
         # Calcular totales y porcentajes para CALRUTA
-        if cliente == '':  # Todos los clientes
-            calruta_total, calruta_promedio = cargar_datos_calruta(semana)
-            try:
-                calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
-                if os.path.exists(calruta_file):
-                    with open(calruta_file, 'r') as f:
-                        calruta_data = json.load(f)
-                    if semana in calruta_data:
-                        calruta_promedio = calruta_data[semana] / 100
-            except Exception:
-                pass  # Si no existe el archivo o el valor no es válido, usar el cálculo automático
-        else:  # Cliente específico
-            calruta_total, calruta_promedio = cargar_datos_calruta(semana, cliente)
+        calruta_total, calruta_promedio = cargar_datos_calruta(semana, cliente) if cliente else cargar_datos_calruta(semana)
+        calruta_total = round(calruta_total) if calruta_total != 'N/A' else 'N/A'
 
         data = {
             'cliente': cliente or 'Todos',
