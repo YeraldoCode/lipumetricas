@@ -236,7 +236,7 @@ def cargar_datos_calruta(semana, cliente=None):
 def detalle_calruta():
     try:
         semana = request.args.get('semana', 'semana_14')
-        cliente = request.args.get('cliente')
+        cliente = request.args.get('cliente', None)
 
         # Leer el archivo correspondiente a la semana
         excel_path = SEMANA_ARCHIVOS.get(semana)
@@ -262,32 +262,17 @@ def detalle_calruta():
         if df['Calidad de Ruta'].max() > 1:
             df['Calidad de Ruta'] = df['Calidad de Ruta'] * 100
 
-        # Filtrar por cliente si se especifica
-        if cliente:
+        # Convertir la columna 'Cliente' a cadena y filtrar por cliente si se especifica
+        if 'Cliente' in df.columns:
             df['Cliente'] = df['Cliente'].astype(str).str.strip()
+        if cliente:
             cliente = str(cliente).strip()
             df = df[df['Cliente'] == cliente]
 
         # Convertir los datos a un diccionario para pasarlos al template
         data = df.to_dict(orient='records')
 
-        # Calcular totales
-        total = df['Total Paradas'].sum()
-        buenos = df['Paradas Encuestadas'].sum()
-        malos = df['Paradas No Encuestadas'].sum()
-        cumplimiento = (buenos / total * 100) if total > 0 else 0
-
-        return render_template(
-            'detalle_calruta.html',
-            data=data,
-            semana=semana,
-            cliente=cliente,
-            titulo='Calidad de Ruta',
-            total=total,
-            buenos=buenos,
-            malos=malos,
-            cumplimiento=round(cumplimiento, 2)
-        )
+        return render_template('detalle_calruta.html', data=data, cliente=cliente, semana=semana, titulo='Calidad de Ruta')
     except Exception as e:
         return f"<h3>Error al cargar detalle de calidad de ruta: {str(e)}</h3>"
 

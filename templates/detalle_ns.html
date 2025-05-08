@@ -169,20 +169,7 @@
                 {% endif %}
             </div>
 
-            <!-- Filtro de Cliente -->
-            <form method="get" class="mb-4">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4 col-12">
-                        <label for="selectCliente" class="form-label fw-semibold text-success">Cliente</label>
-                        <select id="selectCliente" class="form-select border-success" name="cliente" onchange="this.form.submit();">
-                            <option value="">Todos los clientes</option>
-                            {% for c in clientes %}
-                            <option value="{{ c }}" {% if request.args.get('cliente') == c %}selected{% endif %}>{{ c }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </form>
+            
     
             <div class="table-responsive shadow-sm bg-white">
                 <table class="table table-bordered table-hover align-middle mb-0">
