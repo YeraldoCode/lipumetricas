@@ -332,14 +332,17 @@ def index():
         calruta_total, calruta_promedio = cargar_datos_calruta(semana, cliente) if cliente else cargar_datos_calruta(semana)
         calruta_total = round(calruta_total) if calruta_total != 'N/A' else 'N/A'
 
-        # Leer el porcentaje actualizado de calruta_percentage.json
-        calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
-        if os.path.exists(calruta_file):
-            with open(calruta_file, 'r') as f:
-                calruta_data = json.load(f)
-            calruta_actualizado = calruta_data.get(semana, 'N/A')
+        # Leer el porcentaje actualizado de calruta_percentage.json solo si no hay cliente seleccionado
+        if not cliente:
+            calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
+            if os.path.exists(calruta_file):
+                with open(calruta_file, 'r') as f:
+                    calruta_data = json.load(f)
+                calruta_actualizado = calruta_data.get(semana, 'N/A')
+            else:
+                calruta_actualizado = 'N/A'
         else:
-            calruta_actualizado = 'N/A'
+            calruta_actualizado = f"{calruta_promedio:.2%}" if calruta_promedio != 'N/A' else 'N/A'
 
         data = {
             'cliente': cliente or 'Todos',
@@ -358,7 +361,7 @@ def index():
             },
             'cal_ruta': {
                 'total': calruta_total,
-                'porcentaje': f"{calruta_actualizado}%" if calruta_actualizado != 'N/A' else 'N/A'
+                'porcentaje': calruta_actualizado
             }
         }
         return render_template('index.html', data=data, clientes=clientes, request=request, semanas=SEMANA_ARCHIVOS, semana=semana, cliente=cliente, semana_fechas=SEMANA_FECHAS)
