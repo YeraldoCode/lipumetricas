@@ -156,7 +156,9 @@
                 <table class="table table-bordered table-hover align-middle mb-0">
                     <thead>
                         <tr>
+                            {% if not cliente %}
                             <th>Cliente</th>
+                            {% endif %}
                             <th>ID Ruta</th>
                             <th>Total Paradas</th>
                             <th>Paradas Encontradas</th>
@@ -167,38 +169,35 @@
                     <tbody>
                         {% if data %}
                             {% for row in data %}
-                                {% if row['Paradas No Encuestadas'] > 0 %}
-                                <tr>
-                                    <td>{{ row['Cliente'] }}</td>
-                                    <td>{{ row['ID Ruta'] }}</td>
-                                    <td>{{ row['Total Paradas'] }}</td>
-                                    <td>{{ row['Paradas Encuestadas'] }}</td>
-                                    <td>{{ row['Paradas No Encuestadas'] }}</td>
-                                    <td>{{ (row['Calidad de Ruta'] * 100)|round(2) }}%</td>
-                                </tr>
+                            <tr>
+                                {% if not cliente %}
+                                <td>{{ row['Cliente'] }}</td>
                                 {% endif %}
+                                <td>{{ row['ID Ruta'] }}</td>
+                                <td>{{ row['Total Paradas'] }}</td>
+                                <td>{{ row['Paradas Encuestadas'] }}</td>
+                                <td>{{ row['Paradas No Encuestadas'] }}</td>
+                                <td>{{ row['Calidad de Ruta'] }}</td>
+                            </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No hay datos disponibles</td>
+                                <td colspan="{% if cliente %}5{% else %}6{% endif %}" class="text-center text-muted">No hay datos disponibles</td>
                             </tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
-
-            <!-- Gráfico de Calidad de Ruta -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center">
-                        <h5 class="card-title mb-0">Gráfico de Calidad de Ruta</h5>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <canvas id="grafico_calidad_ruta"></canvas>
+        </div>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center">
+                    <h5 class="card-title mb-0">Gráfico de Calidad de Ruta</h5>
                 </div>
             </div>
-
+            <div class="card-body">
+                <canvas id="grafico_calidad_ruta"></canvas>
+            </div>
         </div>
     </div>
 

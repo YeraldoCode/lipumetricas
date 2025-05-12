@@ -243,12 +243,12 @@ def detalle_calruta():
         if not excel_path or not os.path.exists(excel_path):
             raise FileNotFoundError(f"Archivo no encontrado para {semana}")
 
-        # Leer la hoja 'Detalle_cr'
-        df = pd.read_excel(excel_path, sheet_name='Detalle_cr')
-        df.columns = [c.strip() for c in df.columns]
+        # Leer la hoja 'Detalle_cr' para los datos de la tabla
+        df_detalle = pd.read_excel(excel_path, sheet_name='Detalle_cr')
+        df_detalle.columns = [c.strip() for c in df_detalle.columns]
 
         # Renombrar columnas para consistencia
-        df = df.rename(columns={
+        df_detalle = df_detalle.rename(columns={
             'cliente': 'Cliente',
             'id_ruta': 'ID Ruta',
             'total_paradas': 'Total Paradas',
@@ -258,21 +258,47 @@ def detalle_calruta():
         })
 
         # Convertir 'Calidad de Ruta' a porcentaje si es necesario
-        df['Calidad de Ruta'] = df['Calidad de Ruta'].astype(str).str.replace(',', '.').astype(float)
-        if df['Calidad de Ruta'].max() > 1:
-            df['Calidad de Ruta'] = df['Calidad de Ruta'] * 100
+        df_detalle['Calidad de Ruta'] = df_detalle['Calidad de Ruta'].astype(str).str.replace(',', '.').astype(float)
+        if df_detalle['Calidad de Ruta'].max() > 1:
+            df_detalle['Calidad de Ruta'] = df_detalle['Calidad de Ruta'] * 100
 
-        # Convertir la columna 'Cliente' a cadena y filtrar por cliente si se especifica
-        if 'Cliente' in df.columns:
-            df['Cliente'] = df['Cliente'].astype(str).str.strip()
+        # Formatear 'Calidad de Ruta' como porcentaje con dos decimales y coma como separador decimal
+        df_detalle['Calidad de Ruta'] = df_detalle['Calidad de Ruta'].map("{:.2f}".format).str.replace('.', ',') + '%'
+
+        # Filtrar por cliente si se especifica
         if cliente:
+            df_detalle['Cliente'] = df_detalle['Cliente'].apply(lambda x: str(x).strip() if pd.notnull(x) else '')
             cliente = str(cliente).strip()
-            df = df[df['Cliente'] == cliente]
+            df_detalle = df_detalle[df_detalle['Cliente'] == cliente]
 
         # Convertir los datos a un diccionario para pasarlos al template
-        data = df.to_dict(orient='records')
+        data = df_detalle.to_dict(orient='records')
 
-        return render_template('detalle_calruta.html', data=data, cliente=cliente, semana=semana, titulo='Calidad de Ruta')
+        # Leer la hoja 'Carta_cr' para los datos del resumen
+        df_resumen = pd.read_excel(excel_path, sheet_name='Carta_cr')
+        df_resumen.columns = [c.strip() for c in df_resumen.columns]
+        df_resumen = df_resumen.rename(columns={
+            'rutas': 'Rutas',
+            'cr': 'Calidad de Ruta'
+        })
+
+        # Calcular totales y cumplimiento para mostrar en el encabezado
+        total_rutas = df_resumen['Rutas'].sum()
+        total_cumplimiento = (df_resumen['Rutas'] * df_resumen['Calidad de Ruta']).sum() / total_rutas if total_rutas > 0 else 0
+
+        resumen = {
+            'Total': total_rutas,
+            'Cumplimiento': f"{total_cumplimiento:.2f}%"  # Formatear como porcentaje con dos decimales
+        }
+
+        return render_template(
+            'detalle_calruta.html',
+            data=data,
+            resumen=resumen,
+            cliente=cliente,
+            semana=semana,
+            titulo='Calidad de Ruta'
+        )
     except Exception as e:
         return f"<h3>Error al cargar detalle de calidad de ruta: {str(e)}</h3>"
 
@@ -306,6 +332,15 @@ def index():
         calruta_total, calruta_promedio = cargar_datos_calruta(semana, cliente) if cliente else cargar_datos_calruta(semana)
         calruta_total = round(calruta_total) if calruta_total != 'N/A' else 'N/A'
 
+        # Leer el porcentaje actualizado de calruta_percentage.json
+        calruta_file = os.path.join(SEMANAS_FOLDER, 'calruta_percentage.json')
+        if os.path.exists(calruta_file):
+            with open(calruta_file, 'r') as f:
+                calruta_data = json.load(f)
+            calruta_actualizado = calruta_data.get(semana, 'N/A')
+        else:
+            calruta_actualizado = 'N/A'
+
         data = {
             'cliente': cliente or 'Todos',
             'semana': semana,
@@ -323,7 +358,7 @@ def index():
             },
             'cal_ruta': {
                 'total': calruta_total,
-                'porcentaje': f"{calruta_promedio:.2%}" if calruta_promedio != 'N/A' else 'N/A'
+                'porcentaje': f"{calruta_actualizado}%" if calruta_actualizado != 'N/A' else 'N/A'
             }
         }
         return render_template('index.html', data=data, clientes=clientes, request=request, semanas=SEMANA_ARCHIVOS, semana=semana, cliente=cliente, semana_fechas=SEMANA_FECHAS)
