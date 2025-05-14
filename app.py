@@ -722,6 +722,50 @@ def update_calruta_percentage():
         flash(f'Error al actualizar el porcentaje: {str(e)}', 'error')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/detalle_evidencia_vok')
+def detalle_evidencia_vok():
+    try:
+        semana = request.args.get('semana')
+        cliente = request.args.get('cliente')
+
+        # Leer el archivo correspondiente a la semana
+        excel_path = SEMANA_ARCHIVOS.get(semana)
+        if not excel_path or not os.path.exists(excel_path):
+            return jsonify([])
+
+        # Leer la hoja 'Evidencia_vok'
+        df = pd.read_excel(excel_path, sheet_name='Evidencia_vok')
+        df.columns = [c.strip() for c in df.columns]
+
+        # Filtrar por cliente si aplica
+        if cliente and 'cliente' in df.columns:
+            df['cliente'] = df['cliente'].astype(str).str.strip()
+            cliente = str(cliente).strip()
+            df = df[df['cliente'] == cliente]
+
+        # Seleccionar columnas relevantes (ajustar según la estructura de la hoja)
+        df = df[['campo1', 'campo2', 'campo3', 'campo4']]
+
+        # Convertir los datos a un diccionario para enviarlos como JSON
+        data = df.to_dict(orient='records')
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error al cargar datos de Evidencia_vok: {str(e)}")
+        return jsonify([]), 500
+
+@app.route('/api/ultimo_archivo_subido')
+def api_ultimo_archivo_subido():
+    try:
+        archivos = [f for f in os.listdir(SEMANAS_FOLDER) if f.startswith('semana_completa_') and f.endswith('.xlsx')]
+        if not archivos:
+            return jsonify({'archivo': None, 'semana': None})
+        archivos.sort(key=lambda f: os.path.getmtime(os.path.join(SEMANAS_FOLDER, f)), reverse=True)
+        ultimo_archivo = archivos[0]
+        # Extraer la semana del nombre del archivo
+        semana = ultimo_archivo.replace('semana_completa_', '').replace('.xlsx', '')
+        return jsonify({'archivo': ultimo_archivo, 'semana': f'semana_{semana}'})
+    except Exception as e:
+        return jsonify({'archivo': None, 'semana': None})
 if __name__ == '__main__':
     app.run(debug=True)
 

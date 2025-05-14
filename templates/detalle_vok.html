@@ -169,6 +169,10 @@
                 {% endif %}
             </div>
 
+            <div class="d-flex justify-content-end mb-2">
+                <button id="verMasDetalle" class="btn btn-success btn-sm">Ver más a detalle</button>
+            </div>
+
             <div class="table-responsive shadow-sm bg-white">
                 <table class="table table-bordered table-hover align-middle mb-0">
                     <thead>
@@ -186,6 +190,7 @@
                     <tbody>
                         {% if data %}
                             {% for row in data %}
+                            {% if (not cliente or row['c'] == cliente or row['Cliente'] == cliente) and (row['malos']|float >= 1) %}
                             <tr>
                                 {% if not cliente %}
                                 <td>{{ row['c'] }}</td>
@@ -196,6 +201,7 @@
                                 <td>{{ row['vok_p'] }}%</td>
                                 <td>{{ row['malos'] }}</td>
                             </tr>
+                            {% endif %}
                             {% endfor %}
                         {% else %}
                             <tr>
@@ -216,6 +222,7 @@
                 <canvas id="grafico_vok"></canvas>
             </div>
         </div>
+
     </div>
 
     <!-- Footer -->
@@ -375,6 +382,7 @@
                 console.error('Error al crear el gráfico:', error);
             }
         });
+
     </script>
 
     </body>

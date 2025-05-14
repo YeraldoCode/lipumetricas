@@ -188,6 +188,7 @@
                     <tbody>
                         {% if data %}
                             {% for row in data %}
+                            {% if (not cliente or row['c'] == cliente or row['Cliente'] == cliente) and (row['Suma de malos']|float >= 1) %}
                             <tr>
                                 {% if not cliente %}
                                 <td>{{ row['c'] }}</td>
@@ -198,6 +199,7 @@
                                 <td>{{ row['Suma de ns_p'] }}%</td>
                                 <td>{{ row['Suma de malos'] }}</td>
                             </tr>
+                            {% endif %}
                             {% endfor %}
                         {% else %}
                             <tr>

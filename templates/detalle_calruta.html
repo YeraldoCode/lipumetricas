@@ -169,16 +169,15 @@
                     <tbody>
                         {% if data %}
                             {% for row in data %}
+                            {% if (not cliente or row['cliente'] == cliente or row['Cliente'] == cliente) and ((row['malos'] is defined and row['malos']|float >= 1) or (row['malos'] is not defined and row['cr']|replace('%','')|replace(',','.')|float < 100)) %}
                             <tr>
                                 {% if not cliente %}
-                                <td>{{ row['Cliente'] }}</td>
+                                <td>{{ row['cliente'] }}</td>
                                 {% endif %}
-                                <td>{{ row['ID Ruta'] }}</td>
-                                <td>{{ row['Total Paradas'] }}</td>
-                                <td>{{ row['Paradas Encuestadas'] }}</td>
-                                <td>{{ row['Paradas No Encuestadas'] }}</td>
-                                <td>{{ row['Calidad de Ruta'] }}</td>
+                                <td>{{ row['rutas'] }}</td>
+                                <td>{{ row['cr'] }}</td>
                             </tr>
+                            {% endif %}
                             {% endfor %}
                         {% else %}
                             <tr>
