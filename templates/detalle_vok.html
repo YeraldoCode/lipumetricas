@@ -152,8 +152,8 @@
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <img src="/static/images/logoLIPU.jpeg" alt="Lipu">
             </a>
-            <a href="/" class="btn btn-outline-light btn-volver">
-                <i class="bi bi-arrow-left"></i> Volver
+            <a href="javascript:history.back()" class="btn btn-outline-light btn-volver position-absolute top-0 end-0 m-3">
+                    <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
     </nav>
@@ -170,7 +170,7 @@
             </div>
 
             <div class="d-flex justify-content-end mb-2">
-                <button id="verMasDetalle" class="btn btn-success btn-sm">Ver más a detalle</button>
+                <a id="verMasDetalle" class="btn btn-warning btn-sm" href="{{ url_for('detalle_evidencia_vok', semana=semana, cliente=cliente) }}">Ver evidencia</a>
             </div>
 
             <div class="table-responsive shadow-sm bg-white">

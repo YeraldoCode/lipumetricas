@@ -316,6 +316,9 @@ def index():
         if cliente:
             df = df[df['Cliente'] == cliente]
 
+        # Convertir el DataFrame filtrado a un diccionario para mostrar en la tabla
+        tabla_clientes = df.to_dict(orient='records')
+
         # Calcular totales y porcentajes para NS
         ns_total = round(df['N5_TOTAL'].sum()) if not df.empty else 'N/A'
         ns_buenos = round(df['N5_Buenos'].sum()) if not df.empty else 'N/A'
@@ -364,7 +367,7 @@ def index():
                 'porcentaje': calruta_actualizado
             }
         }
-        return render_template('index.html', data=data, clientes=clientes, request=request, semanas=SEMANA_ARCHIVOS, semana=semana, cliente=cliente, semana_fechas=SEMANA_FECHAS)
+        return render_template('index.html', data=data, clientes=clientes, request=request, semanas=SEMANA_ARCHIVOS, semana=semana, cliente=cliente, semana_fechas=SEMANA_FECHAS, tabla_clientes=tabla_clientes)
     except Exception as e:
         return f"<h3>Error al leer archivo: {str(e)}</h3>"
 
@@ -731,7 +734,7 @@ def detalle_evidencia_vok():
         # Leer el archivo correspondiente a la semana
         excel_path = SEMANA_ARCHIVOS.get(semana)
         if not excel_path or not os.path.exists(excel_path):
-            return jsonify([])
+            return render_template('evidencia_vok.html', data=[], semana=semana, cliente=cliente)
 
         # Leer la hoja 'Evidencia_vok'
         df = pd.read_excel(excel_path, sheet_name='Evidencia_vok')
@@ -744,14 +747,51 @@ def detalle_evidencia_vok():
             df = df[df['cliente'] == cliente]
 
         # Seleccionar columnas relevantes (ajustar según la estructura de la hoja)
-        df = df[['campo1', 'campo2', 'campo3', 'campo4']]
+        columnas_evidencia = ['PLANTA', 'RUTAS', 'V MALOS', 'PROBLEMA']
+        columnas_disponibles = [col for col in columnas_evidencia if col in df.columns]
+        df = df[columnas_disponibles]
 
-        # Convertir los datos a un diccionario para enviarlos como JSON
+        # Convertir los datos a un diccionario para enviarlos al template
         data = df.to_dict(orient='records')
-        return jsonify(data)
+        return render_template('evidencia_vok.html', data=data, semana=semana, cliente=cliente)
     except Exception as e:
         print(f"Error al cargar datos de Evidencia_vok: {str(e)}")
-        return jsonify([]), 500
+        return render_template('evidencia_vok.html', data=[], semana=semana, cliente=cliente, error=str(e))
+
+@app.route('/detalle_evidencia_ns')
+def detalle_evidencia_ns():
+    try:
+        semana = request.args.get('semana')
+        cliente = request.args.get('cliente')
+
+        # Leer el archivo correspondiente a la semana
+        excel_path = SEMANA_ARCHIVOS.get(semana)
+        if not excel_path or not os.path.exists(excel_path):
+            return render_template('evidencia_ns.html', data=[], semana=semana, cliente=cliente)
+
+        # Leer la hoja 'Evidencia_ns'
+        df = pd.read_excel(excel_path, sheet_name='Evidencia_ns')
+        df.columns = [c.strip() for c in df.columns]
+
+        # Filtrar por cliente si aplica
+        if cliente and 'PLANTA' in df.columns:
+            df['PLANTA'] = df['PLANTA'].astype(str).str.strip()
+            cliente = str(cliente).strip()
+            df = df[df['PLANTA'] == cliente]
+
+        # Seleccionar columnas relevantes (ajustar según la estructura de la hoja)
+        columnas_evidencia = [
+            "PLANTA",	"RUTAS",	"V MALOS",	"INI RUTA",	"FIN RUTA",	"Observacion",
+        ]
+        columnas_disponibles = [col for col in columnas_evidencia if col in df.columns]
+        df = df[columnas_disponibles]
+
+        # Convertir los datos a un diccionario para enviarlos al template
+        data = df.to_dict(orient='records')
+        return render_template('evidencia_ns.html', data=data, semana=semana, cliente=cliente)
+    except Exception as e:
+        print(f"Error al cargar datos de Evidencia_ns: {str(e)}")
+        return render_template('evidencia_ns.html', data=[], semana=semana, cliente=cliente, error=str(e))
 
 @app.route('/api/ultimo_archivo_subido')
 def api_ultimo_archivo_subido():
