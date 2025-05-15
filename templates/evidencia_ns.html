@@ -11,15 +11,15 @@
             <p class="text-muted">Cliente: <strong>{{ cliente }}</strong></p>
             {% endif %}
         </div>
-        <div class="table-responsive shadow-sm bg-white">
+        <div class="table-responsive shadow-sm bg-white rounded-3 p-2">
             <table class="table table-bordered table-hover align-middle mb-0">
-                <thead>
+                <thead class="table-success">
                     <tr>
-                        <th class="text-nowrap text-center">RUTAS</th>
-                        <th class="text-nowrap text-center">V MALOS</th>
-                        <th class="text-nowrap text-center">INI RUTA</th>
-                        <th class="text-nowrap text-center">FIN RUTA</th>
-                        <th class="text-nowrap text-center">Observación</th>
+                        <th class="text-nowrap ">RUTAS</th>
+                        <th class="text-nowrap ">V MALOS</th>
+                        <th class="text-nowrap ">INI RUTA</th>
+                        <th class="text-nowrap ">FIN RUTA</th>
+                        <th class="text-nowrap ">Observación</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,75 +48,37 @@
 {% endblock %}
 
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-}
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f8f9fa;
-}
-.container {
-    flex: 1 0 auto;
-}
-.table {
-    font-size: 0.95rem;
-    background-color: #fff;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(25,135,84,0.08);
-}
-.table th, .table td {
-    font-size: 0.85rem;
-    text-align: center;
-    vertical-align: middle;
-    word-break: break-word;
-}
-.table thead th {
-    background-color: #198754;
-    color: white;
-}
-.table-bordered > :not(caption) > * > * {
-    border-color: #e0e0e0;
-}
-.table-hover tbody tr:hover {
-    background-color: #f1fdf6;
-    transition: background 0.2s;
-}
-.table td.text-danger {
-    color: #dc3545 !important;
-}
-.table td.text-wrap {
-    white-space: normal !important;
-}
-.table-responsive {
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-.section-header h3 {
-    font-size: 1.4rem;
-    letter-spacing: 0.5px;
-}
-@media (max-width: 576px) {
-    .section-header h3 {
-        font-size: 1.1rem;
-    }
-    .section-header p {
-        font-size: 0.9rem;
-    }
-    .table th, .table td {
-        font-size: 0.75rem;
-        padding: 0.4rem;
-    }
-    .container {
-        padding-left: 0.2rem !important;
-        padding-right: 0.2rem !important;
-    }
-    .table-responsive {
-        padding: 0.2rem !important;
-    }
-}
-</style>
+        body { background-color: #f8f9fa; }
+        .table th, .table td { text-align: center; vertical-align: middle; }
+        .table thead th { background-color: #198754; color: white; }
+        .section-header h3 { font-size: 1.3rem; }
+        @media (max-width: 576px) {
+            .section-header h3 {
+                font-size: 1.1rem;
+            }
+            .table th, .table td {
+                font-size: 0.85rem;
+                padding: 0.4rem;
+            }
+            .container {
+                padding-left: 0.2rem !important;
+                padding-right: 0.2rem !important;
+            }
+            .table-responsive {
+                padding: 0.2rem !important;
+            }
+        }
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+        .table thead th {
+            background-color: #198754;
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
