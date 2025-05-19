@@ -1,367 +1,48 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalle {{ titulo }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% block title %}Detalle Calidad de Ruta{% endblock %}
 
-    <!-- Bootstrap + Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        .navbar {
-            flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .navbar-brand img {
-            height: 36px;
-        }
-
-        .btn-volver {
-            font-size: 0.9rem;
-            padding: 0.4rem 0.6rem;
-        }
-
-        .content-wrapper {
-            flex: 1 0 auto;
-            padding: 1.5rem 1rem;
-        }
-
-        .section-header h3 {
-            font-size: 1.3rem;
-        }
-
-        .table th, .table td {
-            font-size: 0.85rem;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .table thead th {
-            background-color: #198754;
-            color: white;
-        }
-
-        .table-responsive {
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        footer {
-            background-color: #198754;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            margin-top: auto;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 576px) {
-            .section-header h3 {
-                font-size: 1.1rem;
-            }
-
-            .section-header p {
-                font-size: 0.9rem;
-            }
-
-            .table th, .table td {
-                font-size: 0.75rem;
-                padding: 0.4rem;
-            }
-        }
-
-        .swal2-popup {
-            font-family: 'Segoe UI', sans-serif !important;
-        }
-
-        .swal-wide {
-            width: 400px !important;
-        }
-
-        .swal2-icon {
-            border-color: #198754 !important;
-            color: #198754 !important;
-        }
-
-        .swal2-title {
-            color: #198754 !important;
-            font-size: 1.5rem !important;
-        }
-
-        .swal2-html-container {
-            font-size: 1rem !important;
-        }
-
-        @media (max-width: 576px) {
-            .swal-wide {
-                width: 300px !important;
-            }
-            
-            .swal2-title {
-                font-size: 1.3rem !important;
-            }
-            
-            .swal2-html-container {
-                font-size: 0.9rem !important;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/static/images/logoLIPU.jpeg" alt="Lipu">
-            </a>
-            <a href="/" class="btn btn-outline-light btn-volver">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
+{% block content %}
+<div class="content-wrapper">
+    <div class="container">
+        <div class="section-header mb-4 text-center">
+            <h3 class="fw-bold text-success">Detalle Calidad de Ruta</h3>
+            <p class="text-muted mb-1">Semana: <strong>{{ semana.replace('_', ' ')|capitalize }}</strong></p>
+            {% if cliente %}
+            <p class="text-muted">Cliente: <strong>{{ cliente }}</strong></p>
+            {% endif %}
         </div>
-    </nav>
-
-    <!-- Contenido -->
-    <div class="content-wrapper">
-        <div class="container">
-            <div class="section-header mb-4 text-center">
-                <h3 class="fw-bold text-success">Detalle {{ titulo }}</h3>
-                <p class="text-muted mb-1">Semana: <strong>{{ semana.replace('_', ' ')|capitalize }}</strong></p>
-                {% if cliente %}
-                <p class="text-muted">Cliente: <strong>{{ cliente }}</strong></p>
-                {% endif %}
-            </div>
-
-            <div class="table-responsive shadow-sm bg-white">
-                <table class="table table-bordered table-hover align-middle mb-0">
-                    <thead>
+        <div class="table-responsive shadow-sm bg-white rounded-3 p-2">
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-nowrap">Cliente</th>
+                        <th class="text-nowrap">ID Ruta</th>
+                        <th class="text-nowrap">Total Paradas</th>
+                        <th class="text-nowrap">Paradas Encuestadas</th>
+                        <th class="text-nowrap">Paradas No Encuestadas</th>
+                        <th class="text-nowrap">Calidad de Ruta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if data %}
+                        {% for row in data %}
                         <tr>
-                            {% if not cliente %}
-                            <th>Cliente</th>
-                            {% endif %}
-                            <th>ID Ruta</th>
-                            <th>Total Paradas</th>
-                            <th>Paradas Encontradas</th>
-                            <th>Paradas No Encontradas</th>
-                            <th>Calidad de Ruta (%)</th>
+                            <td class="text-center">{{ row['Cliente'] }}</td>
+                            <td class="text-center">{{ row['ID Ruta'] }}</td>
+                            <td class="text-center">{{ row['Total Paradas'] }}</td>
+                            <td class="text-center">{{ row['Paradas Encuestadas'] }}</td>
+                            <td class="text-center">{{ row['Paradas No Encuestadas'] }}</td>
+                            <td class="text-center">{{ row['Calidad de Ruta'] }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% if data %}
-                            {% for row in data %}
-                            {% if (not cliente or row['cliente'] == cliente or row['Cliente'] == cliente) and ((row['malos'] is defined and row['malos']|float >= 1) or (row['malos'] is not defined and row['cr']|replace('%','')|replace(',','.')|float < 100)) %}
-                            <tr>
-                                {% if not cliente %}
-                                <td>{{ row['cliente'] }}</td>
-                                {% endif %}
-                                <td>{{ row['rutas'] }}</td>
-                                <td>{{ row['cr'] }}</td>
-                            </tr>
-                            {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="{% if cliente %}5{% else %}6{% endif %}" class="text-center text-muted">No hay datos disponibles</td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center">
-                    <h5 class="card-title mb-0">Gráfico de Calidad de Ruta</h5>
-                </div>
-            </div>
-            <div class="card-body">
-                <canvas id="grafico_calidad_ruta"></canvas>
-            </div>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No hay datos disponibles</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <!-- Footer -->
-    <footer>
-        LIPU MTY by Traxion © 2025. Todos los derechos reservados.
-    </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
-
-            // Mostrar alerta si no hay cliente seleccionado
-            if (!clienteSeleccionado) {
-                Swal.fire({
-                    title: '¡Información!',
-                    text: 'Selecciona un cliente para ver sus gráficos detallados por ruta.',
-                    icon: 'info',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#198754',
-                    customClass: {
-                        popup: 'swal-wide',
-                        title: 'text-success fw-bold',
-                    }
-                });
-            }
-
-            // Gráfico de Calidad de Ruta
-            try {
-                const tableRows = document.querySelectorAll('table tbody tr');
-                const data = Array.from(tableRows)
-                    .filter(row => !row.classList.contains('text-muted'))  // omitir fila "No hay datos"
-                    .map(row => {
-                        const cells = row.querySelectorAll('td');
-                        return {
-                            cliente: cells[0].textContent.trim(),
-                            idRuta: cells[1].textContent.trim(),
-                            totalParadas: parseInt(cells[2].textContent) || 0,
-                            paradasEncuestadas: parseInt(cells[3].textContent) || 0,
-                            paradasNoEncuestadas: parseInt(cells[4].textContent) || 0,
-                            calidadRuta: parseFloat(cells[5].textContent) || 0
-                        };
-                    });
-
-                if (data.length === 0) {
-                    console.log('No hay datos disponibles para el gráfico');
-                    return;
-                }
-
-                const clienteSeleccionado = "{{ 'true' if cliente else 'false' }}" === "true";
-
-                let labels = [], totalParadas = [], paradasEncuestadas = [], paradasNoEncuestadas = [], calidadRuta = [];
-
-                if (clienteSeleccionado) {
-                    labels = data.map(row => row.idRuta);
-                    totalParadas = data.map(row => row.totalParadas);
-                    paradasEncuestadas = data.map(row => row.paradasEncuestadas);
-                    paradasNoEncuestadas = data.map(row => row.paradasNoEncuestadas);
-                    calidadRuta = data.map(row => row.calidadRuta);
-                } else {
-                    const total = data.reduce((acc, row) => acc + row.totalParadas, 0);
-                    const encuestadas = data.reduce((acc, row) => acc + row.paradasEncuestadas, 0);
-                    const noEncuestadas = data.reduce((acc, row) => acc + row.paradasNoEncuestadas, 0);
-                    const calidadPromedio = total > 0 ? ((encuestadas / total) * 100).toFixed(2) : 0;
-
-                    labels = ['Resumen General'];
-                    totalParadas = [total];
-                    paradasEncuestadas = [encuestadas];
-                    paradasNoEncuestadas = [noEncuestadas];
-                    calidadRuta = [parseFloat(calidadPromedio)];
-                }
-
-                const ctx = document.getElementById('grafico_calidad_ruta');
-                if (!ctx) {
-                    console.error('No se encontró el elemento canvas para el gráfico');
-                    return;
-                }
-
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Total Paradas',
-                                data: totalParadas,
-                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1,
-                                order: 3
-                            },
-                            {
-                                label: 'Paradas Encuestadas',
-                                data: paradasEncuestadas,
-                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1,
-                                order: 2
-                            },
-                            {
-                                label: 'Paradas No Encuestadas',
-                                data: paradasNoEncuestadas,
-                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                borderWidth: 1,
-                                order: 1
-                            },
-                            {
-                                label: 'Calidad de Ruta (%)',
-                                data: calidadRuta,
-                                type: 'line',
-                                borderColor: 'rgba(255, 159, 64, 1)',
-                                borderWidth: 2,
-                                fill: false,
-                                yAxisID: 'porcentaje',
-                                order: 0
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Cantidad de Paradas'
-                            }
-                        },
-                        porcentaje: {
-                            position: 'right',
-                            beginAtZero: true,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Calidad de Ruta (%)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label || '';
-                                    const value = context.parsed.y;
-                                    if (context.dataset.label === 'Calidad de Ruta (%)') {
-                                        return `${label}: ${value}%`;
-                                    }
-                                    return `${label}: ${value}`;
-                                }
-                            }
-                            },
-                            legend: {
-                                position: 'top'
-                            }
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error('Error al crear el gráfico:', error);
-            }
-        }); // Corrección: se agregó el punto y coma para cerrar correctamente la instrucción
-    </script>
-
-</body>
-</html>
+</div>
+{% endblock %}
