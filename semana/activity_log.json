@@ -22,5 +22,11 @@
         "action": "upload",
         "filename": "semana_completa_17.xlsx",
         "details": "Archivo subido exitosamente"
+    },
+    {
+        "timestamp": "2025-06-17 11:56:28",
+        "action": "upload",
+        "filename": "semana_completa_24.xlsx",
+        "details": "Archivo subido exitosamente"
     }
 ]
