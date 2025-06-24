@@ -49,6 +49,11 @@ SEMANA_FECHAS = {
     'semana_23': '2-junio a 8-junio',
     'semana_24': '9-junio a 15-junio',
     'semana_25': '16-junio a 22-junio',
+    'semana_26': '23-junio a 29-junio',
+    'semana_27': '30-junio a 6-julio',
+    'semana_28': '7-julio a 13-julio',
+    'semana_29': '14-julio a 20-julio',
+    'semana_30': '21-julio a 27-julio',
     }
 
 def cargar_datos(semana):
