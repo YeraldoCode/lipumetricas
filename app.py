@@ -816,7 +816,8 @@ def api_ultimo_archivo_subido():
         return jsonify({'archivo': ultimo_archivo, 'semana': f'semana_{semana}'})
     except Exception as e:
         return jsonify({'archivo': None, 'semana': None})
+    
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
 
 
