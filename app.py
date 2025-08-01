@@ -271,7 +271,6 @@ def detalle_calruta():
             return render_template('detalle_calruta.html', data=[], cliente=cliente, semana=semana, titulo='Calidad de Ruta')
 
         # Leer la hoja 'Detalle_cr'
-        import pandas as pd
         df_detalle = pd.read_excel(excel_path, sheet_name='Detalle_cr')
         # Renombrar columnas
         df_detalle = df_detalle.rename(columns={
